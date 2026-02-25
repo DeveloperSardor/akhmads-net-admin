@@ -11,10 +11,12 @@ export function MainLayout() {
     const { user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
+    const roles = user?.roles || (user?.role ? [user.role] : []);
     let role: Role = "moderator";
-    if (user?.role === "ADMIN") role = "superadmin";
-    else if (user?.role === "SUPPORT") role = "moderator";
-    else role = "moderator"; // Default to moderator for now if user has no high privileges, to allow viewing the panel
+
+    if (roles.includes("SUPER_ADMIN")) role = "superadmin";
+    else if (roles.includes("ADMIN")) role = "admin";
+    else if (roles.includes("MODERATOR")) role = "moderator";
 
     const { data: pendingAdsRes } = usePendingAds();
     const { data: pendingBotsRes } = usePendingBots();
