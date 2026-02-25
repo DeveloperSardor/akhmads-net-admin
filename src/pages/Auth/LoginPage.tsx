@@ -77,6 +77,16 @@ export function LoginPage() {
                 const statusRes = await authService.checkLoginStatus(token);
 
                 if (statusRes.authorized && statusRes.tokens?.accessToken && statusRes.user) {
+                    const role = statusRes.user.role?.toUpperCase();
+                    const isAuthorizedAdmin = role === "ADMIN" || role === "SUPERADMIN" || role === "SUPPORT" || role === "MODERATOR";
+
+                    if (!isAuthorizedAdmin) {
+                        stopPolling();
+                        setError("Sizda admin panelga kirish huquqi yo'q!");
+                        setAuthData(null);
+                        return;
+                    }
+
                     stopPolling();
                     login(statusRes.tokens.accessToken, statusRes.tokens.refreshToken || "", statusRes.user);
                 }

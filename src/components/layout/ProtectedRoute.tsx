@@ -17,5 +17,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         return <Navigate to="/login" replace />;
     }
 
-    return children;
+    const { user } = useAuth();
+    const role = user?.role?.toUpperCase();
+    const isAuthorizedAdmin = role === "ADMIN" || role === "SUPERADMIN" || role === "SUPPORT" || role === "MODERATOR";
+
+    if (!isAuthorizedAdmin) {
+        // Log out or redirect to an unauthorized page. Here we redirect to login assuming logout clears state.
+        return <Navigate to="/login" replace />;
+    }
+
+    return <>{children}</>;
 }
