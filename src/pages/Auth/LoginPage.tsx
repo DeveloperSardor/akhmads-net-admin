@@ -63,19 +63,31 @@ export function LoginPage() {
             try {
                 const statusRes = await authService.checkLoginStatus(token);
 
-                if (statusRes.authorized && statusRes.tokens?.accessToken && statusRes.user) {
-                    const role = statusRes.user.role?.toUpperCase();
-                    const isAuthorizedAdmin = role === "ADMIN" || role === "SUPERADMIN" || role === "SUPPORT" || role === "MODERATOR";
+                if (statusRes.authorized && statusRes.tokens?.accessToken) {
+                    // Tokenni vaqtincha saqlab, to'liq profilni olamiz
+                    localStorage.setItem("accessToken", statusRes.tokens.accessToken);
+                    try {
+                        const fullProfile = await authService.getMe();
+                        const roles = fullProfile.roles || statusRes.user?.roles || (fullProfile.role ? [fullProfile.role] : []);
+                        const isAuthorizedAdmin = roles.some(r => ["ADMIN", "SUPER_ADMIN", "MODERATOR"].includes(r.toUpperCase()));
 
-                    if (!isAuthorizedAdmin) {
+                        if (!isAuthorizedAdmin) {
+                            localStorage.removeItem("accessToken");
+                            stopPolling();
+                            setError(`Kirish taqiqlandi! Rolingiz admin paneliga kirish uchun yetarli emas.`);
+                            setAuthData(null);
+                            return;
+                        }
+
                         stopPolling();
-                        setError("Sizda admin panelga kirish huquqi yo'q!");
+                        login(statusRes.tokens.accessToken, statusRes.tokens.refreshToken || "", fullProfile);
+                    } catch (err: any) {
+                        localStorage.removeItem("accessToken");
+                        stopPolling();
+                        setError("Profilni yuklashda xatolik yuz berdi");
                         setAuthData(null);
                         return;
                     }
-
-                    stopPolling();
-                    login(statusRes.tokens.accessToken, statusRes.tokens.refreshToken || "", statusRes.user);
                 }
 
                 if (pollCount > 150) { // Timeout after 5 mins

@@ -21,7 +21,8 @@ export interface LoginStatusResponse {
 export interface UserProfile {
     id: string;
     telegramId: string;
-    role: 'USER' | 'ADMIN' | 'SUPPORT';
+    role: 'ADVERTISER' | 'BOT_OWNER' | 'MODERATOR' | 'ADMIN' | 'SUPER_ADMIN' | string;
+    roles?: string[];
     firstName: string;
     lastName?: string;
     username?: string;
