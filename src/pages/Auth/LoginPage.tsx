@@ -49,20 +49,7 @@ export function LoginPage() {
         }
     };
 
-    const handleOpenTelegram = () => {
-        if (!authData) return;
-
-        const width = 550;
-        const height = 470;
-        const left = window.screen.width / 2 - width / 2;
-        const top = window.screen.height / 2 - height / 2;
-
-        popupRef.current = window.open(
-            authData.deepLink,
-            "Telegram Login",
-            `width=${width},height=${height},top=${top},left=${left}`
-        );
-    };
+    // We will use a native anchor link for reliable deep linking instead of window.open
 
     const startPolling = (token: string) => {
         stopPolling();
@@ -201,14 +188,16 @@ export function LoginPage() {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                <button
-                                    onClick={handleOpenTelegram}
+                                <a
+                                    href={authData.deepLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="btn-telegram"
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', textDecoration: 'none' }}
                                 >
                                     <Send size={20} />
                                     Telegramni ochish
-                                </button>
+                                </a>
 
                                 <button
                                     onClick={handleCancel}
