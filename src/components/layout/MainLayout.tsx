@@ -19,8 +19,8 @@ export function MainLayout() {
     const { data: pendingAdsRes } = usePendingAds();
     const { data: pendingBotsRes } = usePendingBots();
 
-    const pendingAdsCount = pendingAdsRes?.length || 0;
-    const pendingBotsCount = pendingBotsRes?.length || 0;
+    const pendingAdsCount = pendingAdsRes?.total ?? pendingAdsRes?.data?.length ?? 0;
+    const pendingBotsCount = pendingBotsRes?.total ?? pendingBotsRes?.data?.length ?? 0;
     const pendingWithdrawalsCount = 0; // Use mock or query if exists
 
     return (
