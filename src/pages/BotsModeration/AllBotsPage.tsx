@@ -66,7 +66,6 @@ export function AllBotsPage() {
                                                 width: 32,
                                                 height: 32,
                                                 fontSize: 14,
-                                                background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
                                                 fontWeight: 800,
                                             }}>
                                                 {bot.username ? (

@@ -53,7 +53,7 @@ export function ModalRenderer({ modal, setModal }: any) {
                     <>
                         <div className="modal-title">🤖 Bot tafsilotlari</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: 20, background: "linear-gradient(135deg, #3b82f6, #7c3aed)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
                                 {data.username ? (
                                     <img src={`${API_BASE_URL}/bots/avatar/${data.username}`} alt={data.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                 ) : (

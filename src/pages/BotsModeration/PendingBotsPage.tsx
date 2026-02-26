@@ -23,18 +23,6 @@ const fmtDate = (iso: string) =>
         minute: "2-digit"
     });
 
-const getAvatarGradient = (id: string) => {
-    const colors = [
-        'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-        'linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)',
-        'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-        'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
-        'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
-    ];
-    const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    return colors[index];
-};
-
 export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }) {
     const { data: response, isLoading } = usePendingBots();
     const approveBot = useApproveBot();
@@ -156,9 +144,7 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                                                 width: 44,
                                                 height: 44,
                                                 fontSize: 18,
-                                                background: getAvatarGradient(bot.id),
                                                 fontWeight: 800,
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                                             }}>
                                                 {bot.username ? (
                                                     <img
