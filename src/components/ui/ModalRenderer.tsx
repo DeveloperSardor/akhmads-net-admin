@@ -167,7 +167,7 @@ export function ModalRenderer({ modal, setModal }: any) {
                     <>
                         <div className="modal-title">👤 Foydalanuvchi profili</div>
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-                            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: 20, background: "linear-gradient(135deg, #3b82f6, #7c3aed)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>{(data.firstName || data.username || "?")[0]}</div>
+                            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>{(data.firstName || data.username || "?")[0]}</div>
                             <div>
                                 <div style={{ fontSize: 16, fontWeight: 600 }}>{data.firstName || ""} {data.lastName || ""}</div>
                                 <div className="mono" style={{ fontSize: 12, color: "var(--accent2)" }}>@{data.username || "noma'lum"}</div>
