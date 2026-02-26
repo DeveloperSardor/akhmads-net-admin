@@ -33,6 +33,10 @@ export interface Bot {
     createdAt: string;
     adsReceived: number;
     earnings: number;
+    avatarUrl?: string | null;
+    botstatData?: any;
+    totalMembers?: number;
+    activeMembers?: number;
 }
 
 export interface Withdrawal {

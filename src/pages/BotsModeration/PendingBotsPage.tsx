@@ -12,6 +12,7 @@ import {
     Shield
 } from "lucide-react";
 import { usePendingBots, useApproveBot } from "../../hooks/queries/useBots";
+import { API_BASE_URL } from "../../api/client";
 
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", {
@@ -159,7 +160,19 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                                                 fontWeight: 800,
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                                             }}>
-                                                {(bot.firstName || bot.name || "B")[0].toUpperCase()}
+                                                {bot.username ? (
+                                                    <img
+                                                        src={`${API_BASE_URL}/bots/avatar/${bot.username}`}
+                                                        alt={bot.username}
+                                                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                                        onError={(e) => {
+                                                            const name = bot.firstName || bot.name || "B";
+                                                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=8b5cf6&color=fff&size=128&bold=true`;
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    (bot.firstName || bot.name || "B")[0].toUpperCase()
+                                                )}
                                             </div>
                                             <div>
                                                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-main)' }}>{bot.firstName || bot.name}</div>
@@ -188,18 +201,26 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                                         </div>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <div className="elite-stat-icon-wrap" style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(59, 130, 246, 0.05)' }}>
-                                                <Users size={14} />
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <div className="elite-stat-icon-wrap" style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(59, 130, 246, 0.05)' }}>
+                                                    <Users size={14} />
+                                                </div>
+                                                <div className="mono" style={{ fontWeight: 700, fontSize: 14 }}>
+                                                    {(bot.totalMembers || 0).toLocaleString()}
+                                                </div>
                                             </div>
-                                            <div className="mono" style={{ fontWeight: 700, fontSize: 14 }}>
-                                                {(bot.totalMembers || 0).toLocaleString()}
-                                            </div>
+                                            {bot.botstatData && (
+                                                <div style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--text-muted)' }}>
+                                                    <span style={{ color: 'var(--green)' }}>Live: {bot.botstatData.users_live || 0}</span>
+                                                    <span style={{ color: 'var(--red)' }}>Dead: {bot.botstatData.users_die || 0}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </td>
                                     <td>
                                         <div className="mono" style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                                            @{bot.ownerUsername}
+                                            @{bot.owner?.username || bot.ownerUsername}
                                         </div>
                                     </td>
                                     <td>

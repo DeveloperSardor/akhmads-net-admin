@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiErrorResponse } from './types';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.akhmads.net/api/v1';
 
 // Create the axios instance
 export const apiClient = axios.create({

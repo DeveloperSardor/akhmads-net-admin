@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useApproveAd, useRejectAd } from "../../hooks/queries/useAds";
 import { useApproveBot, useRejectBot } from "../../hooks/queries/useBots";
 import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser } from "../../hooks/queries/useAdmin";
+import { API_BASE_URL } from "../../api/client";
 
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -51,15 +52,36 @@ export function ModalRenderer({ modal, setModal }: any) {
                 {type === "view-bot" && (
                     <>
                         <div className="modal-title">🤖 Bot tafsilotlari</div>
-                        <div className="modal-field"><span className="modal-label">Nomi</span><div style={{ fontSize: 16, fontWeight: 600 }}>{data.firstName || data.name}</div></div>
-                        <div className="modal-field"><span className="modal-label">Username</span><div className="modal-value" style={{ color: "var(--accent2)" }}>{data.username}</div></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                            <div className="user-avatar" style={{ width: 48, height: 48, fontSize: 20, background: "linear-gradient(135deg, #3b82f6, #7c3aed)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                                {data.username ? (
+                                    <img src={`${API_BASE_URL}/bots/avatar/${data.username}`} alt={data.username} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    (data.firstName || data.name || "B")[0].toUpperCase()
+                                )}
+                            </div>
+                            <div>
+                                <div style={{ fontSize: 16, fontWeight: 600 }}>{data.firstName || data.name}</div>
+                                <div className="mono" style={{ fontSize: 12, color: "var(--accent2)" }}>@{data.username}</div>
+                            </div>
+                        </div>
                         <div className="modal-divider" />
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                             {[["Egasi", `@${data.ownerUsername || ""}`], ["Kategoriya", `#${data.category || ""}`], ["Til", (data.language || "").toUpperCase()], ["Obunachi", (data.totalMembers || 0).toLocaleString()]].map(([l, v]) => (
                                 <div key={l}><span className="modal-label">{l}</span><div className="modal-value">{v}</div></div>
                             ))}
                         </div>
-                        <div className="modal-actions">
+                        {data.botstatData && (
+                            <div style={{ background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.1)", borderRadius: 10, padding: "12px", marginTop: 16 }}>
+                                <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>🌟 BotStat Auditory Metrics</div>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                                    <div><span className="modal-label">User (Live)</span><div className="modal-value" style={{ color: "var(--green)", fontWeight: 600 }}>{(data.botstatData.users_live || 0).toLocaleString()}</div></div>
+                                    <div><span className="modal-label">User (Die)</span><div className="modal-value" style={{ color: "var(--red)", fontWeight: 600 }}>{(data.botstatData.users_die || 0).toLocaleString()}</div></div>
+                                    <div><span className="modal-label">Groups (Live)</span><div className="modal-value" style={{ fontWeight: 600 }}>{(data.botstatData.groups_live || 0).toLocaleString()}</div></div>
+                                </div>
+                            </div>
+                        )}
+                        <div className="modal-actions" style={{ marginTop: 24 }}>
                             <button className="btn btn-success" onClick={() => { approveBot.mutate(data.id); close(); }} disabled={approveBot.isPending}>✓ Tasdiqlash</button>
                             <button className="btn btn-danger" onClick={() => setModal({ type: "reject-bot", data })}>✕ Rad etish</button>
                             <button className="btn btn-ghost" onClick={close}>Yopish</button>

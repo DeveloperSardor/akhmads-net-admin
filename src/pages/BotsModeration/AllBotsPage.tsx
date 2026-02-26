@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { BotStatus } from "../../AppTypes";
 import { usePendingBots } from "../../hooks/queries/useBots";
+import { API_BASE_URL } from "../../api/client";
 
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -60,13 +61,46 @@ export function AllBotsPage() {
                             {filtered.map((bot: any) => (
                                 <tr key={bot.id}>
                                     <td>
-                                        <div style={{ fontWeight: 500 }}>{bot.firstName || bot.name}</div>
-                                        <div className="mono" style={{ fontSize: 11, color: "var(--accent2)" }}>{bot.username}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <div className="user-avatar" style={{
+                                                width: 32,
+                                                height: 32,
+                                                fontSize: 14,
+                                                background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+                                                fontWeight: 800,
+                                            }}>
+                                                {bot.username ? (
+                                                    <img
+                                                        src={`${API_BASE_URL}/bots/avatar/${bot.username}`}
+                                                        alt={bot.username}
+                                                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                                                        onError={(e) => {
+                                                            const name = bot.firstName || bot.name || "B";
+                                                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=8b5cf6&color=fff&size=64&bold=true`;
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    (bot.firstName || bot.name || "B")[0].toUpperCase()
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 500 }}>{bot.firstName || bot.name}</div>
+                                                <div className="mono" style={{ fontSize: 11, color: "var(--accent2)" }}>{bot.username}</div>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="mono" style={{ fontSize: 12 }}>@{bot.ownerUsername}</td>
+                                    <td className="mono" style={{ fontSize: 12 }}>@{bot.owner?.username || bot.ownerUsername}</td>
                                     <td><span className={`badge ${botStatusColor[bot.status] || "badge-gray"}`}>{botStatusMap[bot.status] || bot.status}</span></td>
                                     <td><span className="tag">#{bot.category}</span></td>
-                                    <td className="mono" style={{ fontWeight: 600 }}>{(bot.totalMembers || 0).toLocaleString()}</td>
+                                    <td>
+                                        <div className="mono" style={{ fontWeight: 600 }}>{(bot.totalMembers || 0).toLocaleString()}</div>
+                                        {bot.botstatData && (
+                                            <div style={{ display: 'flex', gap: 6, fontSize: 10, marginTop: 4 }}>
+                                                <span style={{ color: 'var(--green)' }}>L: {bot.botstatData.users_live || 0}</span>
+                                                <span style={{ color: 'var(--red)' }}>D: {bot.botstatData.users_die || 0}</span>
+                                            </div>
+                                        )}
+                                    </td>
                                     <td className="mono">{(bot.adsReceived || 0).toLocaleString()}</td>
                                     <td className="mono" style={{ color: "var(--green)" }}>${(Number(bot.earnings) || 0).toFixed(2)}</td>
                                     <td style={{ fontSize: 11, color: "var(--text2)" }}>{fmtDate(bot.createdAt)}</td>
