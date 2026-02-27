@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { BotStatus } from "../../AppTypes";
-import { usePendingBots } from "../../hooks/queries/useBots";
+import { useAllBots } from "../../hooks/queries/useBots";
 import { API_BASE_URL } from "../../api/client";
 
 const fmtDate = (iso: string) =>
@@ -25,14 +25,10 @@ const botStatusMap: Record<string, string> = {
 
 export function AllBotsPage() {
     const [statusFilter, setStatusFilter] = useState<BotStatus | "all">("all");
-
-    // As Bots service doesn't have `getAll` (yet in our example), we will reuse getPendingBots as a placeholder
-    // Or we should build a useBots that mimics All... we'll use a mocked empty array for now until fixed
-    const { data: response, isLoading } = usePendingBots();
+    const { data: response, isLoading } = useAllBots(statusFilter !== "all" ? { status: statusFilter } : {});
     const responseData = response as any;
-    const bots = (responseData?.data || []) as any[];
-    // Temp mock filter, ideally we pass `statusFilter` to query params
-    const filtered = statusFilter === "all" ? bots : bots.filter(b => b.status === statusFilter);
+    const filtered = (responseData?.data || []) as any[];
+    const bots = filtered; // Compatibility with line 42
 
     return (
         <div>

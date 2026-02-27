@@ -17,6 +17,15 @@ export const usePendingBots = (params: PaginatedRequest = {}) => {
     });
 };
 
+export const useAllBots = (params: PaginatedRequest & { status?: string } = {}) => {
+    return useQuery({
+        queryKey: [...adminBotKeys.all, "all", JSON.stringify(params)],
+        queryFn: async () => {
+            return await adminService.getAllModerationBots(params);
+        },
+    });
+};
+
 export const useApproveBot = () => {
     const queryClient = useQueryClient();
 

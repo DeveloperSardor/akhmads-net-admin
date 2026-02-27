@@ -52,6 +52,10 @@ export const adminService = {
         const response = await apiClient.get<PaginatedResponse<BotResponse>>('/admin/moderation/bots', { params });
         return response.data;
     },
+    async getAllModerationBots(params?: PaginatedRequest & { status?: string }): Promise<PaginatedResponse<BotResponse>> {
+        const response = await apiClient.get<PaginatedResponse<BotResponse>>('/admin/moderation/bots/all', { params });
+        return response.data;
+    },
     async approveBot(botId: string): Promise<void> {
         await apiClient.post(`/admin/moderation/bots/${botId}/approve`);
     },
