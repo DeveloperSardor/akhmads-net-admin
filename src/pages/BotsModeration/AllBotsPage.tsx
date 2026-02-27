@@ -49,11 +49,11 @@ export function AllBotsPage() {
                 <div className="table-wrap">
                     <table>
                         <thead>
-                            <tr><th>Bot</th><th>Egasi</th><th>Status</th><th>Kategoriya</th><th>Auditoriya</th><th>Ko'rsatilgan</th><th>Daromad</th><th>Sana</th></tr>
+                            <tr><th>Bot</th><th>Egasi</th><th>Status</th><th>Kategoriya</th><th>Ko'rsatilgan</th><th>Daromad</th><th>Sana</th></tr>
                         </thead>
                         <tbody>
-                            {isLoading && <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>Yuklanmoqda...</td></tr>}
-                            {!isLoading && filtered.length === 0 && <tr><td colSpan={8}><div className="empty">Ma'lumot topilmadi</div></td></tr>}
+                            {isLoading && <tr><td colSpan={7} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>Yuklanmoqda...</td></tr>}
+                            {!isLoading && filtered.length === 0 && <tr><td colSpan={7}><div className="empty">Ma'lumot topilmadi</div></td></tr>}
                             {filtered.map((bot: any) => (
                                 <tr key={bot.id}>
                                     <td>
@@ -87,15 +87,6 @@ export function AllBotsPage() {
                                     <td className="mono" style={{ fontSize: 12 }}>@{bot.owner?.username || bot.ownerUsername}</td>
                                     <td><span className={`badge ${botStatusColor[bot.status] || "badge-gray"}`}>{botStatusMap[bot.status] || bot.status}</span></td>
                                     <td><span className="tag">#{bot.category}</span></td>
-                                    <td>
-                                        <div className="mono" style={{ fontWeight: 600 }}>{(bot.totalMembers || 0).toLocaleString()}</div>
-                                        {bot.botstatData && (
-                                            <div style={{ display: 'flex', gap: 6, fontSize: 10, marginTop: 4 }}>
-                                                <span style={{ color: 'var(--green)' }}>L: {bot.botstatData.users_live || 0}</span>
-                                                <span style={{ color: 'var(--red)' }}>D: {bot.botstatData.users_die || 0}</span>
-                                            </div>
-                                        )}
-                                    </td>
                                     <td className="mono">{(bot.adsReceived || 0).toLocaleString()}</td>
                                     <td className="mono" style={{ color: "var(--green)" }}>${(Number(bot.earnings) || 0).toFixed(2)}</td>
                                     <td style={{ fontSize: 11, color: "var(--text2)" }}>{fmtDate(bot.createdAt)}</td>
