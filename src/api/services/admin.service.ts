@@ -7,6 +7,7 @@ import type { UserProfile } from './auth.service';
 
 export interface AdminStats {
     activeAds: number;
+    activeAdsCount?: number;
     impressions: number;
     clicks: number;
     spent: number;
@@ -14,6 +15,10 @@ export interface AdminStats {
     totalRevenue: number;
     platformEarnings: number;
     platformFeePercentage: number;
+    // Dashboard uchun qo'shimcha fieldlar
+    pendingModeration?: number;
+    activeBots?: number;
+    totalSpent?: number;
 }
 
 export interface AdminAnalytics {
