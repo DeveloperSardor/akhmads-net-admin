@@ -117,7 +117,6 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                             <tr>
                                 <th>Bot Identifikatsiyasi</th>
                                 <th>Kategoriya va Til</th>
-                                <th>Auditoriya</th>
                                 <th>Egasi</th>
                                 <th>Yuborilgan</th>
                                 <th style={{ textAlign: 'right' }}>Amallar</th>
@@ -126,7 +125,7 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                         <tbody>
                             {bots.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6}>
+                                    <td colSpan={5}>
                                         <div className="elite-empty-state" style={{ padding: '60px 0' }}>
                                             <div className="elite-empty-icon" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>
                                                 <Check size={32} />
@@ -184,24 +183,6 @@ export function PendingBotsPage({ setModal }: { setModal: (modal: any) => void }
                                                     {(bot.language || "UZ").toUpperCase()}
                                                 </span>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <div className="elite-stat-icon-wrap" style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(59, 130, 246, 0.05)' }}>
-                                                    <Users size={14} />
-                                                </div>
-                                                <div className="mono" style={{ fontWeight: 700, fontSize: 14 }}>
-                                                    {(bot.totalMembers || 0).toLocaleString()}
-                                                </div>
-                                            </div>
-                                            {bot.botstatData && (
-                                                <div style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--text-muted)' }}>
-                                                    <span style={{ color: 'var(--green)' }}>Live: {bot.botstatData.users_live || 0}</span>
-                                                    <span style={{ color: 'var(--red)' }}>Dead: {bot.botstatData.users_die || 0}</span>
-                                                </div>
-                                            )}
                                         </div>
                                     </td>
                                     <td>
