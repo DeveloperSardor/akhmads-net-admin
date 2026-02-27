@@ -23,17 +23,7 @@ const fmtDate = (iso: string) =>
         minute: "2-digit"
     });
 
-const getAdGradient = (id: string) => {
-    const colors = [
-        'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)',
-        'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-        'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
-        'linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%)',
-        'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
-    ];
-    const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-    return colors[index];
-};
+
 
 const getContentTypeIcon = (type: string) => {
     switch (type) {
