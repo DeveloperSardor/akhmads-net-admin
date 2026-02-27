@@ -15,7 +15,7 @@ export const useAds = (params: PaginatedRequest & { status?: string } = {}) => {
     return useQuery({
         queryKey: adsKeys.list(JSON.stringify(params)),
         queryFn: async () => {
-            return await adsService.getMyAds(params);
+            return await adminService.getAllModerationAds(params);
         },
     });
 };
