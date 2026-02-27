@@ -25,7 +25,8 @@ const fmtDate = (iso: string) =>
         month: "short",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
+        second: "2-digit"
     });
 
 const getAvatarGradient = (id: string, type: 'ad' | 'bot') => {
@@ -228,7 +229,7 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                                             <h3 style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 4 }}>{ad.title}</h3>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <Users size={14} /> @{ad.ownerUsername}
+                                                    <Users size={14} /> {ad.advertiser?.firstName || ad.advertiser?.username || 'Noma\'lum'}
                                                 </span>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                     <Clock size={14} /> {fmtDate(ad.createdAt)}
@@ -275,7 +276,7 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                                             <Target size={12} /> {(ad.targetImpressions || 0).toLocaleString()} ko'rishlar
                                         </span>
                                         <span className="tag" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
-                                            <DollarSign size={12} /> Byudjet: ${ad.budget}
+                                            <DollarSign size={12} /> Byudjet: ${ad.totalCost || ad.budget || 0}
                                         </span>
                                     </div>
                                 </div>
