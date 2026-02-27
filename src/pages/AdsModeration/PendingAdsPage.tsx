@@ -207,7 +207,7 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                                     </td>
                                     <td>
                                         <div className="mono" style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-                                            @{ad.ownerUsername}
+                                            @{ad.advertiser?.username || ad.advertiser?.firstName || 'Noma\'lum'}
                                         </div>
                                     </td>
                                     <td>
