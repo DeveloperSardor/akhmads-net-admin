@@ -61,7 +61,7 @@ export function AllAdsPage() {
                                         <div style={{ fontWeight: 500 }}>{ad.title}</div>
                                         <div style={{ fontSize: 11, color: "var(--text2)" }}>{ad.contentType}</div>
                                     </td>
-                                    <td className="mono" style={{ fontSize: 12 }}>@{ad.ownerUsername}</td>
+                                    <td className="mono" style={{ fontSize: 12 }}>@{ad.advertiser?.username || ad.advertiser?.firstName || 'Noma\'lum'}</td>
                                     <td><span className={`badge ${adStatusColor[ad.status]}`}>{adStatusMap[ad.status] || ad.status}</span></td>
                                     <td>
                                         <div className="mono" style={{ fontSize: 12 }}>{(ad.impressions || 0).toLocaleString()} / {(ad.targetImpressions || 0).toLocaleString()}</div>
@@ -69,8 +69,8 @@ export function AllAdsPage() {
                                             <div className="progress-fill" style={{ width: `${Math.min(100, (ad.impressions / (ad.targetImpressions || 1)) * 100) || 0}%` }} />
                                         </div>
                                     </td>
-                                    <td className="mono">${(Number(ad.cpmBid) || 0).toFixed(2)}</td>
-                                    <td className="mono">${(Number(ad.budget) || 0).toFixed(2)}</td>
+                                    <td className="mono">${(Number(ad.cpmBid) || Number(ad.baseCpm) || 0).toFixed(2)}</td>
+                                    <td className="mono">${(Number(ad.totalCost) || Number(ad.budget) || 0).toFixed(2)}</td>
                                     <td style={{ fontSize: 11, color: "var(--text2)" }}>{fmtDate(ad.createdAt)}</td>
                                 </tr>
                             ))}
