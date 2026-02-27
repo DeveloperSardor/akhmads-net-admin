@@ -36,7 +36,14 @@ export function ModalRenderer({ modal, setModal }: any) {
                         <div className="modal-field"><span className="modal-label">Matn</span><div style={{ fontSize: 13, lineHeight: 1.6 }}>{data.text}</div></div>
                         <div className="modal-divider" />
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                            {[["Egasi", `@${data.ownerUsername || 'noma'}`], ["CPM", `$${Number(data.cpmBid || 0).toFixed(2)}`], ["Byudjet", `$${Number(data.budget || 0).toFixed(2)}`], ["Tur", data.contentType || "-"], ["Kategoriya", `#${data.category || ""}`], ["Ko'rishlar", (data.targetImpressions || 0).toLocaleString()]].map(([l, v]) => (
+                            {[
+                                ["Egasi", `@${data.advertiser?.username || data.advertiser?.firstName || data.ownerUsername || 'noma'}`],
+                                ["CPM", `$${Number(data.cpmBid || (data.totalCost / (data.targetImpressions / 1000)) || 0).toFixed(2)}`],
+                                ["Byudjet", `$${Number(data.totalCost || data.budget || 0).toFixed(2)}`],
+                                ["Tur", data.contentType || "-"],
+                                ["Kategoriya", `#${data.category || ""}`],
+                                ["Ko'rishlar", (data.targetImpressions || 0).toLocaleString()]
+                            ].map(([l, v]) => (
                                 <div key={l}><span className="modal-label">{l}</span><div className="modal-value">{v}</div></div>
                             ))}
                         </div>
