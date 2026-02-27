@@ -42,7 +42,7 @@ export function ModalRenderer({ modal, setModal }: any) {
                                 ["Byudjet", `$${Number(data.totalCost || data.budget || 0).toFixed(2)}`],
                                 ["Tur", data.contentType || "-"],
                                 ["Kategoriya", `#${data.category || ""}`],
-                                ["Ko'rishlar", (data.targetImpressions || 0).toLocaleString()]
+                                ["Ko'rishlar", `${(data.deliveredImpressions || 0).toLocaleString()} / ${(data.targetImpressions || 0).toLocaleString()}`]
                             ].map(([l, v]) => (
                                 <div key={l}><span className="modal-label">{l}</span><div className="modal-value">{v}</div></div>
                             ))}

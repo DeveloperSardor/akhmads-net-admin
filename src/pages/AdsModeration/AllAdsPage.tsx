@@ -64,9 +64,9 @@ export function AllAdsPage() {
                                     <td className="mono" style={{ fontSize: 12 }}>@{ad.advertiser?.username || ad.advertiser?.firstName || 'Noma\'lum'}</td>
                                     <td><span className={`badge ${adStatusColor[ad.status]}`}>{adStatusMap[ad.status] || ad.status}</span></td>
                                     <td>
-                                        <div className="mono" style={{ fontSize: 12 }}>{(ad.impressions || 0).toLocaleString()} / {(ad.targetImpressions || 0).toLocaleString()}</div>
+                                        <div className="mono" style={{ fontSize: 12 }}>{(ad.deliveredImpressions || 0).toLocaleString()} / {(ad.targetImpressions || 0).toLocaleString()}</div>
                                         <div className="progress-track" style={{ width: 100 }}>
-                                            <div className="progress-fill" style={{ width: `${Math.min(100, (ad.impressions / (ad.targetImpressions || 1)) * 100) || 0}%` }} />
+                                            <div className="progress-fill" style={{ width: `${Math.min(100, (ad.deliveredImpressions / (ad.targetImpressions || 1)) * 100) || 0}%` }} />
                                         </div>
                                     </td>
                                     <td className="mono">${(Number(ad.cpmBid) || Number(ad.baseCpm) || 0).toFixed(2)}</td>
