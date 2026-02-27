@@ -6,21 +6,19 @@ import type { WalletTransaction } from './wallet.service';
 import type { UserProfile } from './auth.service';
 
 export interface AdminStats {
-    totalRevenue?: number;
-    activeAds?: number;
-    activeBots?: number;
-    pendingModeration?: number;
-    totalSpent?: number;
-    totalImpressions?: number;
-    activeAdsCount?: number;
-    [key: string]: any;
+    activeAds: number;
+    impressions: number;
+    clicks: number;
+    spent: number;
+    ctr: number;
+    totalRevenue: number;
+    platformEarnings: number;
+    platformFeePercentage: number;
 }
 
 export interface AdminAnalytics {
-    categories?: { name: string; value: number; revenue?: number; color?: string }[];
-    revenueGrowth?: { date: string; revenue?: number; spent?: number }[];
-    chartData?: { date: string; spent?: number; impressions?: number; earned?: number }[];
-    [key: string]: any;
+    categories: { name: string; value: number; revenue?: number; color?: string }[];
+    chartData: { date: string; impressions: number; spent: number; clicks: number }[];
 }
 
 export const adminService = {
@@ -136,14 +134,55 @@ export const adminService = {
         const response = await apiClient.get('/admin/pricing/stats');
         return response.data;
     },
+
+    // --- Stats & Analytics ---
     async getAdminStats(): Promise<AdminStats> {
-        // Correcting to a valid platform stats endpoint found in Postman
-        const response = await apiClient.get<AdminStats>('/admin/pricing/stats');
-        return response.data;
+        const [overviewRes, pricingRes] = await Promise.all([
+            apiClient.get('/ads/stats/overview'),
+            apiClient.get('/admin/pricing/stats'),
+        ]);
+
+        // /ads/stats/overview → { data: { stats: [...] } }
+        const statsArr: any[] = overviewRes.data?.data?.stats ?? [];
+        const totals = statsArr.reduce(
+            (acc, s) => ({
+                activeAds: Math.max(acc.activeAds, s.activeAds ?? 0),
+                impressions: acc.impressions + (s.impressions ?? 0),
+                clicks: acc.clicks + (s.clicks ?? 0),
+                spent: acc.spent + (s.spent ?? 0),
+            }),
+            { activeAds: 0, impressions: 0, clicks: 0, spent: 0 }
+        );
+        const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : 0;
+
+        // /admin/pricing/stats → tuzilishini tekshirib ko'ramiz
+        const pr = pricingRes.data?.data ?? pricingRes.data ?? {};
+        const toFloat = (v: unknown) => { const n = parseFloat(String(v ?? 0)); return isNaN(n) ? 0 : n; };
+
+        return {
+            activeAds: totals.activeAds,
+            impressions: totals.impressions,
+            clicks: totals.clicks,
+            spent: totals.spent,
+            ctr: parseFloat(ctr.toFixed(2)),
+            totalRevenue: toFloat(pr.totalRevenue ?? pr.revenue),
+            platformEarnings: toFloat(pr.platformEarnings ?? pr.earnings),
+            platformFeePercentage: toFloat(pr.platformFeePercentage ?? pr.feePercentage),
+        };
     },
+
     async getAdminAnalytics(): Promise<AdminAnalytics> {
-        // Correcting to a valid analytics overview endpoint
-        const response = await apiClient.get<AdminAnalytics>('/ads/stats/overview');
-        return response.data;
-    }
+        const response = await apiClient.get('/ads/stats/overview');
+        const statsArr: any[] = response.data?.data?.stats ?? [];
+
+        return {
+            categories: [],
+            chartData: statsArr.map(s => ({
+                date: new Date(s.date).toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' }),
+                impressions: s.impressions ?? 0,
+                spent: s.spent ?? 0,
+                clicks: s.clicks ?? 0,
+            })),
+        };
+    },
 };

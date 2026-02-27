@@ -26,8 +26,8 @@ export function UsersPage({ setModal }: { setModal: (modal: any) => void }) {
         (u.firstName || "").toLowerCase().includes(search.toLowerCase())
     );
 
-    const totalBalance = users.reduce((acc, u) => acc + (Number(u.balance) || 0), 0);
-    const totalEarned = users.reduce((acc, u) => acc + (Number(u.totalEarned) || 0), 0);
+    const totalBalance = users.reduce((acc, u) => acc + (parseFloat(u.wallet?.available ?? "0") || 0), 0);
+    const totalEarned = users.reduce((acc, u) => acc + (parseFloat(u.wallet?.totalEarned ?? "0") || 0), 0);
 
     return (
         <div className="animate-in">
@@ -136,16 +136,19 @@ export function UsersPage({ setModal }: { setModal: (modal: any) => void }) {
                                     <td className="mono" style={{ fontSize: 12, color: "var(--text3)" }}>{u.telegramId || "-"}</td>
                                     <td>
                                         <div className="mono" style={{ fontWeight: 600, color: "var(--green)", fontSize: 13 }}>
-                                            Balans: ${(Number(u.balance) || 0).toFixed(2)}
+                                            ${parseFloat(u.wallet?.available ?? "0").toFixed(2)}
                                         </div>
                                         <div className="mono" style={{ fontSize: 11, color: "var(--text3)" }}>
-                                            Daromad: ${(Number(u.totalEarned) || 0).toFixed(2)}
+                                            Sarflandi: ${parseFloat(u.wallet?.totalSpent ?? "0").toFixed(2)}
+                                        </div>
+                                        <div className="mono" style={{ fontSize: 11, color: "var(--text3)" }}>
+                                            Daromad: ${parseFloat(u.wallet?.totalEarned ?? "0").toFixed(2)}
                                         </div>
                                     </td>
                                     <td style={{ textAlign: "center" }}>
                                         <div style={{ display: "inline-flex", gap: 4 }}>
-                                            <div className="mini-stat" title="Botlar">🤖 {u.botsCount || 0}</div>
-                                            <div className="mini-stat" title="Reklamalar">📢 {u.adsCount || 0}</div>
+                                            <div className="mini-stat" title="Botlar">🤖 {u._count?.bots ?? 0}</div>
+                                            <div className="mini-stat" title="Reklamalar">📢 {u._count?.ads ?? 0}</div>
                                         </div>
                                     </td>
                                     <td>
