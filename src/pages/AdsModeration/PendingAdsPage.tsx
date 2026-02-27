@@ -52,7 +52,7 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
 
     // Calculate queue stats
     const totalImpressions = ads.reduce((acc, ad) => acc + (ad.targetImpressions || 0), 0);
-    const totalBudget = ads.reduce((acc, ad) => acc + (Number(ad.budget) || 0), 0);
+    const totalBudget = ads.reduce((acc, ad) => acc + (Number(ad.totalCost || ad.budget) || 0), 0);
 
     if (isLoading) {
         return (
@@ -159,16 +159,6 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                                 <tr key={ad.id} className="elite-tr">
                                     <td>
                                         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                                            <div className="user-avatar" style={{
-                                                width: 44,
-                                                height: 44,
-                                                fontSize: 18,
-                                                background: getAdGradient(ad.id),
-                                                fontWeight: 800,
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                                            }}>
-                                                {(ad.title || "A")[0].toUpperCase()}
-                                            </div>
                                             <div style={{ maxWidth: 220 }}>
                                                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.title}</div>
                                                 <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.text}</div>
@@ -201,7 +191,7 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                                                 <DollarSign size={14} />
                                             </div>
                                             <div className="mono" style={{ fontWeight: 700, fontSize: 14, color: 'var(--green)' }}>
-                                                ${(Number(ad.budget) || 0).toFixed(2)}
+                                                ${(Number(ad.totalCost || ad.budget) || 0).toFixed(2)}
                                             </div>
                                         </div>
                                     </td>
