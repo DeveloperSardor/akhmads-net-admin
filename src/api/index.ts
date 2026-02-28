@@ -10,3 +10,4 @@ export * from './services/analytics.service';
 export * from './services/ai.service';
 export * from './services/upload.service';
 export * from './services/admin.service';
+export * from './services/contact.service';

@@ -10,7 +10,8 @@ import {
     Cpu,
     BarChart3,
     UserCog,
-    Settings
+    Settings,
+    MessageSquare,
 } from "lucide-react";
 
 export type Role = "superadmin" | "admin" | "moderator";
@@ -25,7 +26,8 @@ export type Page =
     | "all-bots"
     | "analytics"
     | "settings"
-    | "admins";
+    | "admins"
+    | "contact";
 
 interface SidebarProps {
     isOpen: boolean;
@@ -37,7 +39,7 @@ interface SidebarProps {
 
 export const canAccess = (role: Role, page: Page): boolean => {
     const modPages: Page[] = ["dashboard", "moderation-queue", "pending-ads", "pending-bots"];
-    const adminPages: Page[] = [...modPages, "withdrawals", "users", "all-ads", "all-bots", "analytics"];
+    const adminPages: Page[] = [...modPages, "withdrawals", "users", "all-ads", "all-bots", "analytics", "contact"];
     const superPages: Page[] = [...adminPages, "settings", "admins"];
     if (role === "superadmin") return superPages.includes(page);
     if (role === "admin") return adminPages.includes(page);
@@ -59,6 +61,7 @@ export function Sidebar({ isOpen, role, pendingAdsCount, pendingBotsCount, pendi
         { page: "all-ads" as Page, label: "Barcha Reklamalar", icon: Clapperboard, section: "management", path: "/all-ads" },
         { page: "all-bots" as Page, label: "Barcha Botlar", icon: Cpu, section: "management", path: "/all-bots" },
         { page: "analytics" as Page, label: "Analitika", icon: BarChart3, section: "reports", path: "/analytics" },
+        { page: "contact" as Page, label: "Murojaatlar", icon: MessageSquare, section: "reports", path: "/contact" },
         { page: "admins" as Page, label: "Adminlar", icon: UserCog, section: "system", path: "/admins" },
         { page: "settings" as Page, label: "Sozlamalar", icon: Settings, section: "system", path: "/settings" },
     ].filter(item => canAccess(role, item.page as Page));
