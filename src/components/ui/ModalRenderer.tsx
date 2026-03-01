@@ -193,7 +193,14 @@ export function ModalRenderer({ modal, setModal }: any) {
                         </div>
                         <div className="modal-divider" />
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                            {[["Telegram ID", data.telegramId || "-"], ["Balans", `$${(Number(data.balance) || 0).toFixed(2)}`], ["Jami depozit", `$${(Number(data.totalDeposited) || 0).toFixed(2)}`], ["Jami daromad", `$${(Number(data.totalEarned) || 0).toFixed(2)}`], ["Botlar", data.botsCount || 0], ["Reklamalar", data.adsCount || 0]].map(([l, v]) => (
+                            {[
+                                ["Telegram ID", data.telegramId || "-"],
+                                ["Balans", `$${(Number(data.wallet?.available) || 0).toFixed(2)}`],
+                                ["Jami depozit", `$${(Number(data.wallet?.totalDeposited) || 0).toFixed(2)}`],
+                                ["Jami daromad", `$${(Number(data.wallet?.totalEarned) || 0).toFixed(2)}`],
+                                ["Botlar", data._count?.bots || 0],
+                                ["Reklamalar", data._count?.ads || 0]
+                            ].map(([l, v]) => (
                                 <div key={l}><span className="modal-label">{l}</span><div className="modal-value">{v}</div></div>
                             ))}
                         </div>
