@@ -7,7 +7,6 @@ import {
     Search,
     Download,
     RefreshCw,
-    AlertCircle,
     Bot,
     Calendar,
     ChevronLeft,
