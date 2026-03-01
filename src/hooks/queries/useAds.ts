@@ -65,3 +65,16 @@ export const useRejectAd = () => {
         },
     });
 };
+
+export const useRequestAdEdit = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, feedback }: { id: string; feedback: string }) =>
+            adminService.requestAdEdit(id, feedback),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["adminAds"] });
+            queryClient.invalidateQueries({ queryKey: adsKeys.lists() });
+        },
+    });
+};

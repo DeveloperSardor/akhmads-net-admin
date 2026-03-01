@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApproveAd, useRejectAd } from "../../hooks/queries/useAds";
+import { useApproveAd, useRejectAd, useRequestAdEdit } from "../../hooks/queries/useAds";
 import { useApproveBot, useRejectBot } from "../../hooks/queries/useBots";
 import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser } from "../../hooks/queries/useAdmin";
 import { API_BASE_URL } from "../../api/client";
@@ -13,6 +13,7 @@ export function ModalRenderer({ modal, setModal }: any) {
 
     const approveAd = useApproveAd();
     const rejectAd = useRejectAd();
+    const requestAdEdit = useRequestAdEdit();
 
     const approveBot = useApproveBot();
     const rejectBot = useRejectBot();
@@ -138,7 +139,13 @@ export function ModalRenderer({ modal, setModal }: any) {
                             <textarea className="modal-input" placeholder="Nima o'zgartirilishi kerakligini yozing..." value={reason} onChange={e => setReason(e.target.value)} />
                         </div>
                         <div className="modal-actions">
-                            <button className="btn btn-primary" onClick={() => { close(); }}>So'rov yuborish</button>
+                            <button
+                                className="btn btn-primary"
+                                disabled={requestAdEdit.isPending || !reason.trim()}
+                                onClick={() => { requestAdEdit.mutate({ id: data.id, feedback: reason }); close(); }}
+                            >
+                                So'rov yuborish
+                            </button>
                             <button className="btn btn-ghost" onClick={close}>Bekor</button>
                         </div>
                     </>

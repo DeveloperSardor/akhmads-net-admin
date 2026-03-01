@@ -46,8 +46,8 @@ export const adminService = {
     async rejectAd(adId: string, reason?: string): Promise<void> {
         await apiClient.post(`/admin/moderation/ads/${adId}/reject`, { reason });
     },
-    async requestAdEdit(adId: string, instruction: string): Promise<void> {
-        await apiClient.post(`/admin/moderation/ads/${adId}/request-edit`, { instruction });
+    async requestAdEdit(adId: string, feedback: string): Promise<void> {
+        await apiClient.post(`/admin/moderation/ads/${adId}/request-edit`, { feedback });
     },
 
     // --- Bot Moderation ---

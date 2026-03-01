@@ -211,18 +211,6 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                             </div>
                         ) : ads.map((ad: any) => (
                             <div className="elite-card elite-queue-item-card" key={ad.id} style={{ display: 'flex', gap: 24, padding: 24, position: 'relative', overflow: 'hidden' }}>
-                                <div className="elite-queue-item-visual">
-                                    <div className="user-avatar" style={{
-                                        width: 64,
-                                        height: 64,
-                                        fontSize: 24,
-                                        background: getAvatarGradient(ad.id, 'ad'),
-                                        fontWeight: 900,
-                                        borderRadius: 16
-                                    }}>
-                                        {(ad.title || "A")[0].toUpperCase()}
-                                    </div>
-                                </div>
                                 <div className="elite-queue-item-content" style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                                         <div>
