@@ -58,7 +58,7 @@ export function AllAdsPage() {
                             {ads.map((ad: any) => (
                                 <tr key={ad.id}>
                                     <td>
-                                        <div style={{ fontWeight: 500 }}>{ad.title}</div>
+                                        <div style={{ fontWeight: 500 }}>{ad.text?.slice(0, 60)}</div>
                                         <div style={{ fontSize: 11, color: "var(--text2)" }}>{ad.contentType}</div>
                                     </td>
                                     <td className="mono" style={{ fontSize: 12 }}>@{ad.advertiser?.username || ad.advertiser?.firstName || 'Noma\'lum'}</td>

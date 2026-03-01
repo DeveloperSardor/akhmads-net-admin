@@ -214,7 +214,7 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                                 <div className="elite-queue-item-content" style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                                         <div>
-                                            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 4 }}>{ad.title}</h3>
+                                            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 4 }}>{ad.text?.slice(0, 60)}</h3>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
                                                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                     <Users size={14} /> {ad.advertiser?.firstName || ad.advertiser?.username || 'Noma\'lum'}

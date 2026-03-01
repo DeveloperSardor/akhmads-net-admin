@@ -150,8 +150,7 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                                     <td>
                                         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                                             <div style={{ maxWidth: 220 }}>
-                                                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.title}</div>
-                                                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.text}</div>
+                                                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.text?.slice(0, 60)}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                                                     <span className="badge badge-gray" style={{ fontSize: 9, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 3 }}>
                                                         {getContentTypeIcon(ad.contentType).icon} {getContentTypeIcon(ad.contentType).label}
