@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import { useApproveAd, useRejectAd, useRequestAdEdit } from "../../hooks/queries/useAds";
 import { useApproveBot, useRejectBot } from "../../hooks/queries/useBots";
 import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser, useTopUpUserWallet } from "../../hooks/queries/useAdmin";
@@ -26,6 +27,13 @@ export function ModalRenderer({ modal, setModal }: any) {
     const topUpWallet = useTopUpUserWallet();
 
     const [amount, setAmount] = useState("");
+    const [copied, setCopied] = useState(false);
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const close = () => { setModal(null); setReason(""); setAmount(""); };
 
@@ -174,7 +182,12 @@ export function ModalRenderer({ modal, setModal }: any) {
                         </div>
                         <div className="modal-field">
                             <span className="modal-label">Wallet manzili (BEP-20)</span>
-                            <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12 }}>{data.address || data.walletAddress || "-"}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                                <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, fontSize: 12, flex: 1 }}>{data.address || data.walletAddress || "-"}</div>
+                                <button className="btn btn-ghost btn-sm btn-icon" title="Nusxa olish" onClick={() => copyToClipboard(data.address || data.walletAddress || "")} style={{ flexShrink: 0 }}>
+                                    {copied ? <Check size={14} style={{ color: "var(--green)" }} /> : <Copy size={14} />}
+                                </button>
+                            </div>
                         </div>
                         <div className="modal-actions">
                             <button className="btn btn-success" onClick={() => { approveWithdrawal.mutate(data.id); setModal(null); }} disabled={approveWithdrawal.isPending}>✓ Tasdiqlash (jo'natildi)</button>
@@ -204,7 +217,12 @@ export function ModalRenderer({ modal, setModal }: any) {
                         </div>
                         <div className="modal-field">
                             <span className="modal-label">Wallet manzili (BEP-20)</span>
-                            <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12, wordBreak: "break-all" }}>{data.address || data.walletAddress || "-"}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                                <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, fontSize: 12, wordBreak: "break-all", flex: 1 }}>{data.address || data.walletAddress || "-"}</div>
+                                <button className="btn btn-ghost btn-sm btn-icon" title="Nusxa olish" onClick={() => copyToClipboard(data.address || data.walletAddress || "")} style={{ flexShrink: 0 }}>
+                                    {copied ? <Check size={14} style={{ color: "var(--green)" }} /> : <Copy size={14} />}
+                                </button>
+                            </div>
                         </div>
                         {data.txHash && (
                             <div className="modal-field">
