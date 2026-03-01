@@ -223,6 +223,15 @@ export const adminService = {
         const response = await apiClient.get('/admin/broadcasts', { params });
         return response.data;
     },
+    async approveBroadcast(id: string): Promise<void> {
+        await apiClient.post(`/admin/broadcasts/${id}/approve`);
+    },
+    async rejectBroadcast(id: string, reason: string): Promise<void> {
+        await apiClient.post(`/admin/broadcasts/${id}/reject`, { reason });
+    },
+    async requestBroadcastEdit(id: string, feedback: string): Promise<void> {
+        await apiClient.post(`/admin/broadcasts/${id}/request-edit`, { feedback });
+    },
     async getAllBots(params?: any): Promise<any> {
         const response = await apiClient.get('/admin/moderation/bots/all', { params });
         return response.data;

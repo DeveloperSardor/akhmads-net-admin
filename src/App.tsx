@@ -20,6 +20,7 @@ import { SettingsPage } from "./pages/Settings/SettingsPage";
 import { ContactPage } from "./pages/Contact/ContactPage";
 import { CategoriesPage } from "./pages/Categories/CategoriesPage";
 import { StatisticsPage } from "./pages/Statistics/StatisticsPage";
+import { BroadcastModerationPage } from "./pages/Broadcasts/BroadcastModerationPage";
 
 // Modal
 import { ModalRenderer } from "./components/ui/ModalRenderer";
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/statistics" element={<StatisticsPage />} />
+          <Route path="/broadcasts" element={<BroadcastModerationPage />} />
         </Route>
       </Routes>
 
