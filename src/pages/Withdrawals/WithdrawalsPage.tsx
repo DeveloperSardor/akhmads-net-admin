@@ -65,20 +65,23 @@ export function WithdrawalsPage({ setModal }: { setModal: (modal: any) => void }
                                 <tr key={w.id}>
                                     <td>
                                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                            <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{w.username[0].toUpperCase()}</div>
-                                            <span className="mono" style={{ fontSize: 12 }}>@{w.username}</span>
+                                            <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{(w.username || w.user?.username || "?")[0].toUpperCase()}</div>
+                                            <span className="mono" style={{ fontSize: 12 }}>@{w.username || w.user?.username || "noma'lum"}</span>
                                         </div>
                                     </td>
                                     <td className="mono" style={{ fontWeight: 600 }}>${w.amount}</td>
                                     <td className="mono" style={{ color: "var(--red)" }}>-${w.fee}</td>
                                     <td className="mono" style={{ fontWeight: 700, color: "var(--green)" }}>${w.amountToSend}</td>
                                     <td>
-                                        <div className="addr" title={w.walletAddress}>
-                                            {w.walletAddress.slice(0, 8)}...{w.walletAddress.slice(-6)}
+                                        <div className="addr" title={w.walletAddress || w.payment?.address || "-"}>
+                                            {(w.walletAddress || w.payment?.address || "").length > 14
+                                                ? `${(w.walletAddress || w.payment?.address || "").slice(0, 8)}...${(w.walletAddress || w.payment?.address || "").slice(-6)}`
+                                                : (w.walletAddress || w.payment?.address || "-")
+                                            }
                                         </div>
                                     </td>
                                     <td><span className={`badge ${wdStatusColor[w.status]}`}>{wdStatusMap[w.status] || w.status}</span></td>
-                                    <td style={{ fontSize: 11, color: "var(--text2)" }}>{fmtDate(w.requestedAt)}</td>
+                                    <td style={{ fontSize: 11, color: "var(--text2)" }}>{w.requestedAt || w.createdAt ? fmtDate(w.requestedAt || w.createdAt) : "-"}</td>
                                     <td>
                                         {(w.status === "REQUESTED" || w.status === "PENDING_REVIEW") ? (
                                             <div className="action-btns">
