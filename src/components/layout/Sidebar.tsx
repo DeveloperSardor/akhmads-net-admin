@@ -13,6 +13,7 @@ import {
     Settings,
     MessageSquare,
     Tags,
+    Activity,
 } from "lucide-react";
 
 export type Role = "superadmin" | "admin" | "moderator";
@@ -27,6 +28,7 @@ export type Page =
     | "all-bots"
     | "categories"
     | "analytics"
+    | "statistics"
     | "settings"
     | "admins"
     | "contact";
@@ -41,7 +43,7 @@ interface SidebarProps {
 
 export const canAccess = (role: Role, page: Page): boolean => {
     const modPages: Page[] = ["dashboard", "moderation-queue", "pending-ads", "pending-bots"];
-    const adminPages: Page[] = [...modPages, "withdrawals", "users", "all-ads", "all-bots", "categories", "analytics", "contact"];
+    const adminPages: Page[] = [...modPages, "withdrawals", "users", "all-ads", "all-bots", "categories", "analytics", "statistics", "contact"];
     const superPages: Page[] = [...adminPages, "settings", "admins"];
     if (role === "superadmin") return superPages.includes(page);
     if (role === "admin") return adminPages.includes(page);
@@ -64,6 +66,7 @@ export function Sidebar({ isOpen, role, pendingAdsCount, pendingBotsCount, pendi
         { page: "all-bots" as Page, label: "Barcha Botlar", icon: Cpu, section: "management", path: "/all-bots" },
         { page: "categories" as Page, label: "Kategoriyalar", icon: Tags, section: "management", path: "/categories" },
         { page: "analytics" as Page, label: "Analitika", icon: BarChart3, section: "reports", path: "/analytics" },
+        { page: "statistics" as Page, label: "Statistika", icon: Activity, section: "reports", path: "/statistics" },
         { page: "contact" as Page, label: "Murojaatlar", icon: MessageSquare, section: "reports", path: "/contact" },
         { page: "admins" as Page, label: "Adminlar", icon: UserCog, section: "system", path: "/admins" },
         { page: "settings" as Page, label: "Sozlamalar", icon: Settings, section: "system", path: "/settings" },

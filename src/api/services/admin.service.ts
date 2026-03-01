@@ -193,4 +193,38 @@ export const adminService = {
             })),
         };
     },
+
+    // --- Detailed Stats ---
+    async getImpressions(params?: any): Promise<any> {
+        const response = await apiClient.get('/admin/detailed-stats/impressions', { params });
+        return response.data;
+    },
+    async getImpressionsExport(params?: any): Promise<any[]> {
+        const response = await apiClient.get('/admin/detailed-stats/impressions/export', { params });
+        return response.data?.data || [];
+    },
+    async getClicks(params?: any): Promise<any> {
+        const response = await apiClient.get('/admin/detailed-stats/clicks', { params });
+        return response.data;
+    },
+    async getClicksExport(params?: any): Promise<any[]> {
+        const response = await apiClient.get('/admin/detailed-stats/clicks/export', { params });
+        return response.data?.data || [];
+    },
+    async getBotUsersAdmin(botId: string, params?: any): Promise<any> {
+        const response = await apiClient.get(`/admin/detailed-stats/bot/${botId}/users`, { params });
+        return response.data;
+    },
+    async getBotUsersExport(botId: string, params?: any): Promise<any[]> {
+        const response = await apiClient.get(`/admin/detailed-stats/bot/${botId}/export`, { params });
+        return response.data?.data || [];
+    },
+    async getAllBroadcasts(params?: any): Promise<any> {
+        const response = await apiClient.get('/admin/broadcasts', { params });
+        return response.data;
+    },
+    async getAllBots(params?: any): Promise<any> {
+        const response = await apiClient.get('/admin/moderation/bots/all', { params });
+        return response.data;
+    },
 };
