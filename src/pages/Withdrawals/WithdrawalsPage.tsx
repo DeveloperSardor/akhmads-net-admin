@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye } from "lucide-react";
 import { useAdminWithdrawals, useRejectWithdrawal } from "../../hooks/queries/useAdmin";
 
 const fmtDate = (iso: string) =>
@@ -87,9 +88,10 @@ export function WithdrawalsPage({ setModal }: { setModal: (modal: any) => void }
                                             <div className="action-btns">
                                                 <button className="btn btn-success btn-sm" onClick={() => setModal({ type: "approve-withdrawal", data: w })}>✓ Tasdiqlash</button>
                                                 <button className="btn btn-danger btn-sm btn-icon" onClick={() => rejectMutation.mutate({ id: w.id })} disabled={rejectMutation.isPending}>✕</button>
+                                                <button className="btn btn-ghost btn-sm btn-icon" title="Ko'rish" onClick={() => setModal({ type: "view-withdrawal", data: w })}><Eye size={15} /></button>
                                             </div>
                                         ) : (
-                                            <span style={{ fontSize: 11, color: "var(--text3)" }}>—</span>
+                                            <button className="btn btn-ghost btn-sm btn-icon" title="Ko'rish" onClick={() => setModal({ type: "view-withdrawal", data: w })}><Eye size={15} /></button>
                                         )}
                                     </td>
                                 </tr>

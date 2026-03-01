@@ -184,6 +184,46 @@ export function ModalRenderer({ modal, setModal }: any) {
                     </>
                 )}
 
+                {/* View Withdrawal */}
+                {type === "view-withdrawal" && (
+                    <>
+                        <div className="modal-title">📋 Chiqarish so'rovi tafsilotlari</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                            {[
+                                ["Foydalanuvchi", `@${data.user?.username || data.username || "?"}`],
+                                ["Telegram ID", data.user?.telegramId || "-"],
+                                ["So'ragan miqdor", `$${data.amount} USDT`],
+                                ["Komissiya", `$${data.fee}`],
+                                ["Jo'natiladigan", `$${data.netAmount || data.amountToSend} USDT`],
+                                ["Status", data.status || "-"],
+                                ["To'lov usuli", `${data.coin || "USDT"} (${data.network || "BEP20"})`],
+                                ["Sana", data.createdAt ? fmtDate(data.createdAt) : "-"],
+                            ].map(([l, v]) => (
+                                <div key={l}><span className="modal-label">{l}</span><div className="modal-value" style={{ fontWeight: 600 }}>{v}</div></div>
+                            ))}
+                        </div>
+                        <div className="modal-field">
+                            <span className="modal-label">Wallet manzili (BEP-20)</span>
+                            <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12, wordBreak: "break-all" }}>{data.address || data.walletAddress || "-"}</div>
+                        </div>
+                        {data.txHash && (
+                            <div className="modal-field">
+                                <span className="modal-label">Tranzaksiya hash</span>
+                                <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12, wordBreak: "break-all" }}>{data.txHash}</div>
+                            </div>
+                        )}
+                        <div className="modal-actions">
+                            {(data.status === "REQUESTED" || data.status === "PENDING_REVIEW") && (
+                                <>
+                                    <button className="btn btn-success" onClick={() => setModal({ type: "approve-withdrawal", data })}>✓ Tasdiqlash</button>
+                                    <button className="btn btn-danger" onClick={() => { rejectWithdrawal.mutate({ id: data.id }); close(); }} disabled={rejectWithdrawal.isPending}>✕ Rad etish</button>
+                                </>
+                            )}
+                            <button className="btn btn-ghost" onClick={close}>Yopish</button>
+                        </div>
+                    </>
+                )}
+
                 {/* View User */}
                 {type === "view-user" && (
                     <>
