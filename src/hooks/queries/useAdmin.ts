@@ -65,6 +65,17 @@ export const useUpdateUserRole = () => {
     });
 };
 
+export const useTopUpUserWallet = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, amount, reason }: { id: string; amount: number; reason: string }) =>
+            adminService.topUpUserWallet(id, amount, reason),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminUserKeys.lists() });
+        },
+    });
+};
+
 // --- Withdrawals ---
 export const useAdminWithdrawals = (params: PaginatedRequest & { status?: string } = {}) => {
     return useQuery({

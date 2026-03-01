@@ -100,6 +100,9 @@ export const adminService = {
     async unbanUser(id: string): Promise<void> {
         await apiClient.post(`/admin/users/${id}/unban`);
     },
+    async topUpUserWallet(id: string, amount: number, reason: string): Promise<void> {
+        await apiClient.post(`/admin/users/${id}/topup`, { amount, reason });
+    },
 
     // --- Pricing Management ---
     async getAllPricingTiers(): Promise<AdPricingTier[]> {

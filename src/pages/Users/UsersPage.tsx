@@ -9,7 +9,8 @@ import {
     Wallet,
     TrendingUp,
     ShieldAlert,
-    X
+    X,
+    Plus
 } from "lucide-react";
 
 export function UsersPage({ setModal }: { setModal: (modal: any) => void }) {
@@ -165,6 +166,14 @@ export function UsersPage({ setModal }: { setModal: (modal: any) => void }) {
                                     </td>
                                     <td>
                                         <div className="action-btns">
+                                            <button
+                                                className="btn btn-ghost btn-sm btn-icon"
+                                                title="Hisobni to'ldirish"
+                                                onClick={() => setModal({ type: "topup-user", data: u })}
+                                                style={{ color: "var(--green)" }}
+                                            >
+                                                <Plus size={16} />
+                                            </button>
                                             <button
                                                 className="btn btn-ghost btn-sm btn-icon"
                                                 title="Ko'rish"

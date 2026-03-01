@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useApproveAd, useRejectAd, useRequestAdEdit } from "../../hooks/queries/useAds";
 import { useApproveBot, useRejectBot } from "../../hooks/queries/useBots";
-import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser } from "../../hooks/queries/useAdmin";
+import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser, useTopUpUserWallet } from "../../hooks/queries/useAdmin";
 import { API_BASE_URL } from "../../api/client";
 
 const fmtDate = (iso: string) =>
@@ -23,8 +23,11 @@ export function ModalRenderer({ modal, setModal }: any) {
 
     const banUser = useBanUser();
     const unbanUser = useUnbanUser();
+    const topUpWallet = useTopUpUserWallet();
 
-    const close = () => { setModal(null); setReason(""); };
+    const [amount, setAmount] = useState("");
+
+    const close = () => { setModal(null); setReason(""); setAmount(""); };
 
     return (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && close()}>
@@ -201,7 +204,51 @@ export function ModalRenderer({ modal, setModal }: any) {
                             ) : (
                                 <button className="btn btn-danger" disabled={banUser.isPending} onClick={() => { banUser.mutate({ id: data.id, reason: "Admin qildi" }); setModal(null); }}>⊘ Bloklash</button>
                             )}
+                            <button className="btn btn-primary" onClick={() => setModal({ type: "topup-user", data })}>💰 To'ldirish</button>
                             <button className="btn btn-ghost" onClick={close}>Yopish</button>
+                        </div>
+                    </>
+                )}
+
+                {/* Topup User Wallet */}
+                {type === "topup-user" && (
+                    <>
+                        <div className="modal-title">💰 Hamyonni to'ldirish</div>
+                        <div style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>
+                            <b>{data.firstName || data.username}</b> hamyoniga mablag' qo'shish
+                        </div>
+                        <div className="modal-field">
+                            <span className="modal-label">Miqdor (USDT)</span>
+                            <input
+                                type="number"
+                                className="modal-input"
+                                placeholder="Masalan: 10.50"
+                                value={amount}
+                                onChange={e => setAmount(e.target.value)}
+                            />
+                        </div>
+                        <div className="modal-field">
+                            <span className="modal-label">Sabab / Izoh</span>
+                            <textarea
+                                className="modal-input"
+                                placeholder="To'ldirish sababini yozing..."
+                                value={reason}
+                                onChange={e => setReason(e.target.value)}
+                            />
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="btn btn-success"
+                                disabled={topUpWallet.isPending || !amount || !reason}
+                                onClick={() => {
+                                    topUpWallet.mutate({ id: data.id, amount: parseFloat(amount), reason }, {
+                                        onSuccess: () => close()
+                                    });
+                                }}
+                            >
+                                ✓ Tasdiqlash
+                            </button>
+                            <button className="btn btn-ghost" onClick={close}>Bekor</button>
                         </div>
                     </>
                 )}
