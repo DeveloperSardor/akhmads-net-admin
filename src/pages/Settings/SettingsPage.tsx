@@ -8,7 +8,9 @@ export function SettingsPage({ showToast }: any) {
         platform_fee_percentage: 20, minWithdrawal: 10, maxWithdrawal: 10000,
         minAdBudget: 5, autoApprove: false, maintenanceMode: false,
         tgBotToken: "", clickServiceId: "", paymeKey: "",
-        ad_base_cpm: 1.5
+        ad_base_cpm: 1.5,
+        min_frequency_minutes: 0,
+        max_frequency_minutes: 60,
     });
 
     useEffect(() => {
@@ -48,6 +50,8 @@ export function SettingsPage({ showToast }: any) {
             const payload = {
                 platform_fee_percentage: settings.platform_fee_percentage,
                 ad_base_cpm: settings.ad_base_cpm,
+                min_frequency_minutes: settings.min_frequency_minutes,
+                max_frequency_minutes: settings.max_frequency_minutes,
             };
             await updateSettings(payload);
             showToast("Sozlamalar saqlandi", "success");
@@ -173,7 +177,48 @@ export function SettingsPage({ showToast }: any) {
                     </div>
                 </div>
 
-                {/* 2. INTEGRATSIYA */}
+                {/* 3. BOT CHASTOTASI */}
+                <div className="settings-card">
+                    <div className="settings-section-title">
+                        <span>⏱️</span> Bot Reklama Chastotasi
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <div className="settings-item-label">Minimal chastota (daqiqa)</div>
+                            <div className="settings-item-hint">Bot egalari tanlashi mumkin bo'lgan eng kichik vaqt oralig'i. <b>0</b> = cheklovsiz</div>
+                        </div>
+                        <div className="settings-input-group">
+                            <input className="modal-input mono" type="number" min="0"
+                                value={settings.min_frequency_minutes}
+                                onChange={e => updateValue("min_frequency_minutes", Math.max(0, +e.target.value))}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <div className="settings-item-label">Maksimal chastota (daqiqa)</div>
+                            <div className="settings-item-hint">Bot egalari tanlashi mumkin bo'lgan eng katta vaqt oralig'i</div>
+                        </div>
+                        <div className="settings-input-group">
+                            <input className="modal-input mono" type="number" min="0"
+                                value={settings.max_frequency_minutes}
+                                onChange={e => updateValue("max_frequency_minutes", Math.max(0, +e.target.value))}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ padding: "12px 0 0", color: "var(--text-dim)", fontSize: 12 }}>
+                        Hozirgi diapazon: <b style={{ color: "var(--accent-primary)" }}>{settings.min_frequency_minutes} - {settings.max_frequency_minutes} daqiqa</b>
+                    </div>
+
+                    <div className="settings-card-footer">
+                        <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={saving}>Saqlash</button>
+                    </div>
+                </div>
+
+                {/* 4. INTEGRATSIYA */}
                 <div className="settings-card">
                     <div className="settings-section-title">
                         <span>�</span> Integratsiyalar
