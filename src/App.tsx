@@ -18,6 +18,7 @@ import { AnalyticsPage } from "./pages/Analytics/AnalyticsPage";
 import { AdminsPage } from "./pages/Admins/AdminsPage";
 import { SettingsPage } from "./pages/Settings/SettingsPage";
 import { ContactPage } from "./pages/Contact/ContactPage";
+import { CategoriesPage } from "./pages/Categories/CategoriesPage";
 
 // Modal
 import { ModalRenderer } from "./components/ui/ModalRenderer";
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/admins" element={<AdminsPage showToast={showToast} />} />
           <Route path="/settings" element={<SettingsPage showToast={showToast} />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
         </Route>
       </Routes>
 

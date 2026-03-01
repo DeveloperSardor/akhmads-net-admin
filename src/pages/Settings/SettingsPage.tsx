@@ -1,14 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getSettings, updateSettings } from "../../services/settings.service";
 
 export function SettingsPage({ showToast }: any) {
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState({
-        platformFee: 3, minWithdrawal: 10, maxWithdrawal: 10000,
+        platform_fee_percentage: 20, minWithdrawal: 10, maxWithdrawal: 10000,
         minAdBudget: 5, autoApprove: false, maintenanceMode: false,
-        tgBotToken: "7123456789:HIDDEN...", clickServiceId: "12345", paymeKey: "hidden",
+        tgBotToken: "", clickServiceId: "", paymeKey: "",
+        ad_base_cpm: 1.5
     });
+
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            setLoading(true);
+            const res = await getSettings();
+            // Backend returns grouped settings: { categoryName: [ { key, valueType, value }, ... ] }
+            const newSettings: any = { ...settings };
+            Object.values(res.data).forEach((group: any) => {
+                group.forEach((item: any) => {
+                    let val = item.value;
+                    if (item.valueType === 'number') val = parseFloat(val);
+                    if (item.valueType === 'boolean') val = val === 'true';
+                    newSettings[item.key] = val;
+                });
+            });
+            setSettings(newSettings);
+        } catch (error) {
+            showToast("Sozlamalarni yuklashda xatolik", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const updateValue = (key: string, val: any) => {
         setSettings(prev => ({ ...prev, [key]: val }));
+    };
+
+    const saveSettings = async () => {
+        try {
+            setSaving(true);
+            // Convert to flat object for update
+            const payload = {
+                platform_fee_percentage: settings.platform_fee_percentage,
+                ad_base_cpm: settings.ad_base_cpm,
+            };
+            await updateSettings(payload);
+            showToast("Sozlamalar saqlandi", "success");
+        } catch (error) {
+            showToast("Saqlashda xatolik", "error");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const toggleValue = (key: string) => {
@@ -17,12 +64,19 @@ export function SettingsPage({ showToast }: any) {
         showToast(`Sozlama ${newVal ? "yoqildi" : "o'chirildi"}`, "info");
     };
 
+    if (loading) return <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Yuklanmoqda...</div>;
+
     return (
         <div className="settings-container">
             <div className="page-head">
                 <div className="page-head-left">
                     <div className="section-title">Tizim sozlamalari</div>
                     <div className="section-sub">Platformaning asosiy konfiguratsiyasi va integratsiyalarini boshqarish</div>
+                </div>
+                <div className="page-head-actions">
+                    <button className="btn btn-primary" onClick={saveSettings} disabled={saving}>
+                        {saving ? "Saqlanmoqda..." : "Yangi o'zgarishlarni saqlash"}
+                    </button>
                 </div>
             </div>
 
@@ -36,13 +90,41 @@ export function SettingsPage({ showToast }: any) {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <div className="settings-item-label">Platforma komissiyasi</div>
-                            <div className="settings-item-hint">Har bir pul yechib olish so'rovidan ushlab qolinadigan komissiya miqdori ($)</div>
+                            <div className="settings-item-label">Reklama narxi (1000 ta ko'rish)*</div>
+                            <div className="settings-item-hint">Reklama beruvchiga sotiladigan narx ($)</div>
+                        </div>
+                        <div className="settings-input-group">
+                            <input className="modal-input mono" type="number" step="0.1"
+                                value={settings.ad_base_cpm}
+                                onChange={e => updateValue("ad_base_cpm", +e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <div className="settings-item-label">Bot egasining ulushi (%)</div>
+                            <div className="settings-item-hint">
+                                Reklama narxining qancha qismi tarqatuvchiga byudjet qilinadi ({100 - settings.platform_fee_percentage}% bot egasiga). 
+                                Hozirgi narx bo'yicha: <b>${(settings.ad_base_cpm * (100 - settings.platform_fee_percentage) / 100).toFixed(2)}</b> / 1000ta komission
+                            </div>
                         </div>
                         <div className="settings-input-group">
                             <input className="modal-input mono" type="number"
-                                value={settings.platformFee}
-                                onChange={e => updateValue("platformFee", +e.target.value)}
+                                value={100 - settings.platform_fee_percentage}
+                                onChange={e => updateValue("platform_fee_percentage", 100 - (+e.target.value))}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <div className="settings-item-label">Platforma komissiyasi (%)</div>
+                            <div className="settings-item-hint">Tizimga qoladigan ulush</div>
+                        </div>
+                        <div className="settings-input-group">
+                            <input className="modal-input mono" type="number" style={{ background: "rgba(0,0,0,0.05)" }} disabled title="Bu bot egasining ulushiga bog'liq hisoblanadi"
+                                value={settings.platform_fee_percentage}
                             />
                         </div>
                     </div>
@@ -87,7 +169,7 @@ export function SettingsPage({ showToast }: any) {
                     </div>
 
                     <div className="settings-card-footer">
-                        <button className="btn btn-primary btn-sm" onClick={() => showToast("To'lov sozlamalari saqlandi")}>Saqlash</button>
+                        <button className="btn btn-primary btn-sm" onClick={saveSettings} disabled={saving}>Saqlash</button>
                     </div>
                 </div>
 
