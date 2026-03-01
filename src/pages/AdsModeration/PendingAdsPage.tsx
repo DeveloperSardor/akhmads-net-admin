@@ -10,7 +10,8 @@ import {
     Shield,
     FileText,
     Image as ImageIcon,
-    Video
+    Video,
+    ExternalLink
 } from "lucide-react";
 import { usePendingAds, useApproveAd } from "../../hooks/queries/useAds";
 
@@ -148,8 +149,8 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                             ) : ads.map((ad: any) => (
                                 <tr key={ad.id} className="elite-tr">
                                     <td>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                                            <div style={{ maxWidth: 220 }}>
+                                        <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                                            <div style={{ maxWidth: 280 }}>
                                                 <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.text?.slice(0, 60)}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                                                     <span className="badge badge-gray" style={{ fontSize: 9, padding: '2px 6px', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -157,6 +158,56 @@ export function PendingAdsPage({ setModal }: { setModal: (modal: any) => void })
                                                     </span>
                                                     <span className="tag" style={{ fontSize: 9, padding: '2px 6px' }}>#{ad.category}</span>
                                                 </div>
+                                                {(() => {
+                                                    try {
+                                                        const buttons = typeof ad.buttons === 'string' ? JSON.parse(ad.buttons) : ad.buttons;
+                                                        if (buttons && Array.isArray(buttons) && buttons.length > 0) {
+                                                            return (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+                                                                    {buttons.map((btn: any, i: number) => {
+                                                                        const colorMap: Record<string, string> = {
+                                                                            blue: '#3b82f6',
+                                                                            green: '#10b981',
+                                                                            red: '#ef4444',
+                                                                            orange: '#f59e0b',
+                                                                            purple: '#8b5cf6',
+                                                                        };
+                                                                        const btnColor = colorMap[btn.color] || '#3b82f6';
+                                                                        return (
+                                                                            <a
+                                                                                key={i}
+                                                                                href={btn.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="ad-btn-preview"
+                                                                                style={{
+                                                                                    display: 'inline-flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: 5,
+                                                                                    padding: '4px 10px',
+                                                                                    borderRadius: 8,
+                                                                                    fontSize: 11,
+                                                                                    fontWeight: 600,
+                                                                                    background: `${btnColor}18`,
+                                                                                    color: btnColor,
+                                                                                    border: `1px solid ${btnColor}30`,
+                                                                                    textDecoration: 'none',
+                                                                                    cursor: 'pointer',
+                                                                                    transition: 'all 0.2s ease',
+                                                                                    width: 'fit-content',
+                                                                                }}
+                                                                            >
+                                                                                <ExternalLink size={10} />
+                                                                                {btn.text}
+                                                                            </a>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    } catch { return null; }
+                                                })()}
                                             </div>
                                         </div>
                                     </td>
