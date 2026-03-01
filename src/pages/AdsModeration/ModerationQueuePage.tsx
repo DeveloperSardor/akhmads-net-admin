@@ -14,7 +14,8 @@ import {
     FileText,
     Image as ImageIcon,
     Video,
-    Clock
+    Clock,
+    ExternalLink
 } from "lucide-react";
 import { usePendingAds, useApproveAd } from "../../hooks/queries/useAds";
 import { usePendingBots, useApproveBot } from "../../hooks/queries/useBots";
@@ -255,6 +256,54 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                                     <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, marginBottom: 16, background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 10 }}>
                                         {ad.text}
                                     </p>
+                                    {(() => {
+                                        try {
+                                            const buttons = typeof ad.buttons === 'string' ? JSON.parse(ad.buttons) : ad.buttons;
+                                            if (buttons && Array.isArray(buttons) && buttons.length > 0) {
+                                                return (
+                                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                                                        {buttons.map((btn: any, i: number) => {
+                                                            const colorMap: Record<string, string> = {
+                                                                blue: '#3b82f6',
+                                                                green: '#10b981',
+                                                                red: '#ef4444',
+                                                                orange: '#f59e0b',
+                                                                purple: '#8b5cf6',
+                                                            };
+                                                            const btnColor = colorMap[btn.color] || '#3b82f6';
+                                                            return (
+                                                                <a
+                                                                    key={i}
+                                                                    href={btn.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    style={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        gap: 6,
+                                                                        padding: '6px 14px',
+                                                                        borderRadius: 10,
+                                                                        fontSize: 13,
+                                                                        fontWeight: 600,
+                                                                        background: `${btnColor}18`,
+                                                                        color: btnColor,
+                                                                        border: `1px solid ${btnColor}30`,
+                                                                        textDecoration: 'none',
+                                                                        cursor: 'pointer',
+                                                                        transition: 'all 0.2s ease',
+                                                                    }}
+                                                                >
+                                                                    <ExternalLink size={12} />
+                                                                    {btn.text}
+                                                                </a>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        } catch { return null; }
+                                    })()}
                                     <div className="elite-queue-tags" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                         <span className="tag" style={{ border: '1px solid rgba(168, 85, 247, 0.2)', color: '#a855f7' }}>#{ad.category}</span>
                                         <span className="tag" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
