@@ -51,8 +51,11 @@ export function Header({ toggleSidebar, role }: HeaderProps) {
             <div className={`header-role-badge ${ROLE_COLORS[role]}`} style={{ borderRadius: 20, padding: "3px 12px" }}>
                 {role === "superadmin" ? "👑 Super Admin" : role === "admin" ? "🛡️ Admin" : "🔍 Moderator"}
             </div>
-            <div className="header-time mono">
-                {time.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div className="header-time mono" style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                    <span>🇷🇺 MOW: {time.toLocaleTimeString("uz-UZ", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit" })}</span>
+                    <span style={{ color: "var(--text-main)", fontSize: 13 }}>🇺🇿 UZ: {time.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}</span>
+                </div>
             </div>
         </header>
     );

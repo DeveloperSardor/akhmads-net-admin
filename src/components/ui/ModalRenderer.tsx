@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { useApproveAd, useRejectAd, useRequestAdEdit } from "../../hooks/queries/useAds";
 import { useApproveBot, useRejectBot } from "../../hooks/queries/useBots";
+import { useRejectBroadcast, useRequestBroadcastEdit } from "../../hooks/queries/useBroadcasts";
 import { useApproveWithdrawal, useRejectWithdrawal, useBanUser, useUnbanUser, useTopUpUserWallet } from "../../hooks/queries/useAdmin";
 import { API_BASE_URL } from "../../api/client";
 
@@ -18,6 +19,9 @@ export function ModalRenderer({ modal, setModal }: any) {
 
     const approveBot = useApproveBot();
     const rejectBot = useRejectBot();
+
+    const rejectBroadcast = useRejectBroadcast();
+    const requestBroadcastEdit = useRequestBroadcastEdit();
 
     const approveWithdrawal = useApproveWithdrawal();
     const rejectWithdrawal = useRejectWithdrawal();
@@ -154,6 +158,44 @@ export function ModalRenderer({ modal, setModal }: any) {
                                 className="btn btn-primary"
                                 disabled={requestAdEdit.isPending || !reason.trim()}
                                 onClick={() => { requestAdEdit.mutate({ id: data.id, feedback: reason }); close(); }}
+                            >
+                                So'rov yuborish
+                            </button>
+                            <button className="btn btn-ghost" onClick={close}>Bekor</button>
+                        </div>
+                    </>
+                )}
+
+                {/* Reject Broadcast */}
+                {type === "reject-broadcast" && (
+                    <>
+                        <div className="modal-title">Broadcastni rad etish</div>
+                        <div style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Ushbu broadcastni rad etasizmi?</div>
+                        <div className="modal-field">
+                            <span className="modal-label">Sabab (foydalanuvchiga yuboriladi)</span>
+                            <textarea className="modal-input" placeholder="Rad etish sababini kiriting..." value={reason} onChange={e => setReason(e.target.value)} />
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn btn-danger" onClick={() => { rejectBroadcast.mutate({ id: data.id, reason }); close(); }} disabled={rejectBroadcast.isPending}>Rad etish</button>
+                            <button className="btn btn-ghost" onClick={close}>Bekor</button>
+                        </div>
+                    </>
+                )}
+
+                {/* Request Edit Broadcast */}
+                {type === "request-edit-broadcast" && (
+                    <>
+                        <div className="modal-title">Tahrirlash so'rash</div>
+                        <div style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Ushbu broadcastga tahrirlash so'rovi yuborasizmi?</div>
+                        <div className="modal-field">
+                            <span className="modal-label">Izoh (foydalanuvchiga yuboriladi)</span>
+                            <textarea className="modal-input" placeholder="Nima o'zgartirilishi kerakligini yozing..." value={reason} onChange={e => setReason(e.target.value)} />
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="btn btn-primary"
+                                disabled={requestBroadcastEdit.isPending || !reason.trim()}
+                                onClick={() => { requestBroadcastEdit.mutate({ id: data.id, feedback: reason }); close(); }}
                             >
                                 So'rov yuborish
                             </button>

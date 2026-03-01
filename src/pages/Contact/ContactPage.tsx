@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Mail, Search, MessageSquare, Clock, CheckCheck, Inbox, ChevronDown, ChevronUp, User } from "lucide-react";
-import { useContactMessages } from "../../hooks/queries/useContact";
+import { useContactMessages, useUpdateContactMessage } from "../../hooks/queries/useContact";
 import type { ContactMessage } from "../../api/services/contact.service";
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -21,6 +21,8 @@ export function ContactPage() {
         status: statusFilter === "all" ? undefined : statusFilter,
         limit: 100,
     });
+
+    const updateStatusMutation = useUpdateContactMessage();
 
     const messages: ContactMessage[] = data?.messages || [];
 
@@ -181,7 +183,12 @@ export function ContactPage() {
                         >
                             {/* Message header — click to expand */}
                             <div
-                                onClick={() => setExpandedId(expanded ? null : msg.id)}
+                                onClick={() => {
+                                    if (!expanded && msg.status === "new") {
+                                        updateStatusMutation.mutate({ id: msg.id, status: 'read' });
+                                    }
+                                    setExpandedId(expanded ? null : msg.id);
+                                }}
                                 style={{
                                     padding: "18px 22px",
                                     cursor: "pointer",
@@ -280,7 +287,40 @@ export function ContactPage() {
                                             <Mail size={14} />
                                             Javob berish
                                         </a>
-                                        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+
+                                        {msg.status === "new" && (
+                                            <button
+                                                className="btn btn-sm"
+                                                onClick={(e) => { e.stopPropagation(); updateStatusMutation.mutate({ id: msg.id, status: 'read' }); }}
+                                                disabled={updateStatusMutation.isPending}
+                                                style={{
+                                                    display: "inline-flex", alignItems: "center", gap: 7,
+                                                    background: "rgba(96,165,250,.1)", color: "#60a5fa",
+                                                    border: "1px solid rgba(96,165,250,.2)", borderRadius: 9, padding: "8px 16px",
+                                                    fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                                }}
+                                            >
+                                                <Mail size={14} /> O'qildi qilish
+                                            </button>
+                                        )}
+
+                                        {msg.status !== "resolved" && (
+                                            <button
+                                                className="btn btn-sm"
+                                                onClick={(e) => { e.stopPropagation(); updateStatusMutation.mutate({ id: msg.id, status: 'resolved' }); }}
+                                                disabled={updateStatusMutation.isPending}
+                                                style={{
+                                                    display: "inline-flex", alignItems: "center", gap: 7,
+                                                    background: "rgba(52,211,153,.1)", color: "#34d399",
+                                                    border: "1px solid rgba(52,211,153,.2)", borderRadius: 9, padding: "8px 16px",
+                                                    fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                                }}
+                                            >
+                                                <CheckCheck size={14} /> Hal qilindi
+                                            </button>
+                                        )}
+
+                                        <span style={{ fontSize: 12, color: "var(--text-muted)", marginLeft: "auto" }}>
                                             ID: <span style={{ fontFamily: "monospace" }}>{msg.id}</span>
                                         </span>
                                     </div>

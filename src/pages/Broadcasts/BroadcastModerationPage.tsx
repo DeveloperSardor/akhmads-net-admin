@@ -1,16 +1,9 @@
-import { useState } from "react";
-import {
-    Radio,
-    Check,
-    X,
-    Edit,
-    Users,
-    DollarSign,
-    Clock,
-    Bot,
-    RefreshCw,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { adminService } from "../../api/services/admin.service";
+import { Radio } from "lucide-react";
+
+type TabStatus = "PENDING_REVIEW" | "APPROVED" | "RUNNING" | "COMPLETED" | "REJECTED" | "DRAFT" | "all";
 
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", {
@@ -21,37 +14,51 @@ const fmtDate = (iso: string) =>
         minute: "2-digit",
     });
 
-type TabStatus = "PENDING" | "APPROVED" | "RUNNING" | "COMPLETED" | "REJECTED";
+const statusColorMap: Record<string, string> = {
+    PENDING_REVIEW: "badge-amber",
+    APPROVED: "badge-blue",
+    RUNNING: "badge-green",
+    PAUSED: "badge-gray",
+    COMPLETED: "badge-purple",
+    REJECTED: "badge-red",
+    DRAFT: "badge-gray",
+};
 
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-    PENDING:   { label: "Kutilmoqda",  className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-    APPROVED:  { label: "Tasdiqlandi", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-    RUNNING:   { label: "Yuborilmoqda", className: "bg-green-500/15 text-green-400 border-green-500/30" },
-    COMPLETED: { label: "Tugadi",      className: "bg-gray-500/15 text-gray-400 border-gray-500/30" },
-    REJECTED:  { label: "Rad etildi",  className: "bg-red-500/15 text-red-400 border-red-500/30" },
-    DRAFT:     { label: "Qoralama",    className: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
+const statusLabelMap: Record<string, string> = {
+    all: "Barchasi",
+    PENDING_REVIEW: "Kutilmoqda",
+    APPROVED: "Tasdiqlangan",
+    RUNNING: "Faol",
+    PAUSED: "To'xtatilgan",
+    COMPLETED: "Yakunlangan",
+    REJECTED: "Rad etilgan",
+    DRAFT: "Qoralama",
 };
 
 export function BroadcastModerationPage() {
-    const [tab, setTab] = useState<TabStatus>("PENDING");
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Parse initial tab from URL or default to all
+    const initialTabMatch = new URLSearchParams(location.search).get("tab") as TabStatus;
+    const initialTab = initialTabMatch || "all";
+
+    const [statusFilter, setStatusFilter] = useState<TabStatus>(initialTab);
     const [broadcasts, setBroadcasts] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState<string | null>(null);
-    const [rejectModal, setRejectModal] = useState<{ id: string; mode: "reject" | "edit" } | null>(null);
-    const [rejectReason, setRejectReason] = useState("");
-    const [error, setError] = useState("");
 
     const load = async (status: TabStatus) => {
         setLoading(true);
-        setError("");
         try {
-            const res = await adminService.getAllBroadcasts({ status, limit: 50, offset: 0 });
+            const apiStatus = status === "all" ? undefined : status;
+            const res = await adminService.getAllBroadcasts({ status: apiStatus, limit: 50, offset: 0 });
             const data = res?.data ?? [];
             setBroadcasts(Array.isArray(data) ? data : []);
             setTotal(res?.pagination?.total ?? data.length);
         } catch (e: any) {
-            setError(e?.response?.data?.message || "Yuklashda xatolik");
+            console.error("Yuklashda xatolik", e);
+            setBroadcasts([]);
         } finally {
             setLoading(false);
         }
@@ -59,302 +66,118 @@ export function BroadcastModerationPage() {
 
     // Load on mount and tab change
     const handleTab = (t: TabStatus) => {
-        setTab(t);
+        setStatusFilter(t);
+        navigate(`/broadcasts${t === "all" ? "" : `?tab=${t}`}`, { replace: true });
         load(t);
     };
 
+    // Listen to URL changes
+    useEffect(() => {
+        const currentTabConfig = new URLSearchParams(location.search).get("tab") as TabStatus;
+        const targetTab = currentTabConfig || "all";
+        if (targetTab !== statusFilter) {
+            setStatusFilter(targetTab);
+            load(targetTab);
+        }
+    }, [location.search]);
+
     // Initial load
-    useState(() => { load("PENDING"); });
-
-    const handleApprove = async (id: string) => {
-        setActionLoading(id + "-approve");
-        try {
-            await adminService.approveBroadcast(id);
-            setBroadcasts(prev => prev.filter(b => b.id !== id));
-        } catch (e: any) {
-            alert(e?.response?.data?.message || "Xatolik");
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
-    const handleRejectOrEdit = async () => {
-        if (!rejectModal || !rejectReason.trim()) return;
-        setActionLoading(rejectModal.id);
-        try {
-            if (rejectModal.mode === "reject") {
-                await adminService.rejectBroadcast(rejectModal.id, rejectReason);
-            } else {
-                await adminService.requestBroadcastEdit(rejectModal.id, rejectReason);
-            }
-            setBroadcasts(prev => prev.filter(b => b.id !== rejectModal.id));
-            setRejectModal(null);
-            setRejectReason("");
-        } catch (e: any) {
-            alert(e?.response?.data?.message || "Xatolik");
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
-    const tabs: { key: TabStatus; label: string }[] = [
-        { key: "PENDING",   label: "Kutilmoqda" },
-        { key: "APPROVED",  label: "Tasdiqlangan" },
-        { key: "RUNNING",   label: "Yuborilmoqda" },
-        { key: "COMPLETED", label: "Tugagan" },
-        { key: "REJECTED",  label: "Rad etilgan" },
-    ];
+    useEffect(() => {
+        load(initialTab);
+    }, []);
 
     return (
-        <div className="page-content">
-            <div className="page-header">
-                <div>
-                    <h1 className="page-title">
-                        <Radio size={22} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
-                        Broadcast Moderatsiya
-                    </h1>
-                    <p className="page-subtitle">Reklama broadcastlarini ko'rib chiqing va boshqaring</p>
+        <div>
+            <div className="page-head">
+                <div className="page-head-left">
+                    <div className="section-title">Barcha broadcastlar</div>
+                    <div className="section-sub">{total} ta broadcast</div>
                 </div>
-                <button className="btn btn-secondary" onClick={() => load(tab)}>
-                    <RefreshCw size={14} /> Yangilash
-                </button>
             </div>
 
-            {/* Tabs */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-                {tabs.map(t => (
+            <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+                {(["all", "PENDING_REVIEW", "APPROVED", "RUNNING", "COMPLETED", "REJECTED", "DRAFT"] as TabStatus[]).map(s => (
                     <button
-                        key={t.key}
-                        onClick={() => handleTab(t.key)}
-                        className={`btn ${tab === t.key ? "btn-primary" : "btn-secondary"}`}
-                        style={{ fontSize: 13 }}
+                        key={s}
+                        className={`btn btn-sm ${statusFilter === s ? "btn-primary" : "btn-ghost"}`}
+                        onClick={() => handleTab(s)}
                     >
-                        {t.label}
-                        {tab === t.key && total > 0 && (
-                            <span style={{
-                                marginLeft: 6, background: "rgba(255,255,255,0.2)",
-                                borderRadius: 10, padding: "1px 7px", fontSize: 11
-                            }}>{total}</span>
-                        )}
+                        {statusLabelMap[s] || s}
                     </button>
                 ))}
             </div>
 
-            {error && (
-                <div className="alert alert-error" style={{ marginBottom: 16 }}>{error}</div>
-            )}
-
-            {loading ? (
-                <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>
-                    <RefreshCw size={24} style={{ animation: "spin 1s linear infinite" }} />
-                    <p style={{ marginTop: 12 }}>Yuklanmoqda...</p>
+            <div className="card">
+                <div className="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Xabar Matni</th>
+                                <th>Egasi</th>
+                                <th>Bot</th>
+                                <th>Status</th>
+                                <th>Qabul qildi / Qamrov</th>
+                                <th>Narxi</th>
+                                <th>Sana</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading && (
+                                <tr>
+                                    <td colSpan={7} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>
+                                        Yuklanmoqda...
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && broadcasts.length === 0 && (
+                                <tr>
+                                    <td colSpan={7}>
+                                        <div className="empty">Ma'lumot topilmadi</div>
+                                    </td>
+                                </tr>
+                            )}
+                            {broadcasts.map((b: any) => (
+                                <tr key={b.id}>
+                                    <td>
+                                        <div style={{ fontWeight: 500, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                            {b.text?.slice(0, 60)}
+                                        </div>
+                                    </td>
+                                    <td className="mono" style={{ fontSize: 12 }}>
+                                        @{b.advertiser?.username || b.advertiser?.firstName || "Noma'lum"}
+                                    </td>
+                                    <td className="mono" style={{ fontSize: 12, color: "var(--blue)" }}>
+                                        <Radio size={12} style={{ display: "inline", marginRight: 4, verticalAlign: -1 }} />
+                                        @{b.bot?.username || "?"}
+                                    </td>
+                                    <td>
+                                        <span className={`badge ${statusColorMap[b.status] || "badge-gray"}`}>
+                                            {statusLabelMap[b.status] || b.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="mono" style={{ fontSize: 12 }}>
+                                            {(b.sentCount || 0).toLocaleString()} / {(b.targetCount || 0).toLocaleString()}
+                                        </div>
+                                        <div className="progress-track" style={{ width: 100 }}>
+                                            <div
+                                                className="progress-fill"
+                                                style={{ width: `${Math.min(100, ((b.sentCount || 0) / (b.targetCount || 1)) * 100) || 0}%` }}
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="mono" style={{ color: "var(--green)" }}>
+                                        ${(Number(b.totalCost) || 0).toFixed(2)}
+                                    </td>
+                                    <td style={{ fontSize: 11, color: "var(--text2)" }}>
+                                        {fmtDate(b.createdAt)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-            ) : broadcasts.length === 0 ? (
-                <div style={{
-                    textAlign: "center", padding: 60, color: "var(--text-muted)",
-                    background: "var(--card)", borderRadius: 12, border: "1px solid var(--border)"
-                }}>
-                    <Radio size={48} style={{ opacity: 0.3, marginBottom: 16 }} />
-                    <p>Broadcast topilmadi</p>
-                </div>
-            ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {broadcasts.map(b => {
-                        const badge = STATUS_BADGE[b.status] || STATUS_BADGE["PENDING"];
-                        const advertiserName = b.advertiser?.username
-                            ? `@${b.advertiser.username}`
-                            : `${b.advertiser?.firstName || ""} ${b.advertiser?.lastName || ""}`.trim() || "—";
-
-                        return (
-                            <div key={b.id} style={{
-                                background: "var(--card)", border: "1px solid var(--border)",
-                                borderRadius: 12, padding: 20,
-                            }}>
-                                {/* Header */}
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                                    <div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                                            <span style={{
-                                                fontSize: 11, fontWeight: 700, padding: "3px 8px",
-                                                borderRadius: 6, border: "1px solid",
-                                            }} className={badge.className}>
-                                                {badge.label}
-                                            </span>
-                                            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                                                <Clock size={11} style={{ display: "inline", marginRight: 3 }} />
-                                                {fmtDate(b.createdAt)}
-                                            </span>
-                                        </div>
-                                        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                                            ID: <code style={{ fontSize: 11 }}>{b.id}</code>
-                                        </div>
-                                    </div>
-
-                                    {/* Action buttons — only for PENDING */}
-                                    {b.status === "PENDING" && (
-                                        <div style={{ display: "flex", gap: 8 }}>
-                                            <button
-                                                className="btn btn-success"
-                                                style={{ fontSize: 12, padding: "6px 14px" }}
-                                                disabled={actionLoading === b.id + "-approve"}
-                                                onClick={() => handleApprove(b.id)}
-                                            >
-                                                <Check size={14} />
-                                                {actionLoading === b.id + "-approve" ? "..." : "Tasdiqlash"}
-                                            </button>
-                                            <button
-                                                className="btn btn-secondary"
-                                                style={{ fontSize: 12, padding: "6px 14px" }}
-                                                onClick={() => { setRejectModal({ id: b.id, mode: "edit" }); setRejectReason(""); }}
-                                            >
-                                                <Edit size={14} />
-                                                Edit so'r
-                                            </button>
-                                            <button
-                                                className="btn btn-danger"
-                                                style={{ fontSize: 12, padding: "6px 14px" }}
-                                                onClick={() => { setRejectModal({ id: b.id, mode: "reject" }); setRejectReason(""); }}
-                                            >
-                                                <X size={14} />
-                                                Rad etish
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Info */}
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 16 }}>
-                                    <div style={{ background: "var(--bg)", borderRadius: 8, padding: "10px 12px" }}>
-                                        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                                            Reklamachi
-                                        </div>
-                                        <div style={{ fontSize: 13, fontWeight: 600 }}>{advertiserName}</div>
-                                    </div>
-                                    <div style={{ background: "var(--bg)", borderRadius: 8, padding: "10px 12px" }}>
-                                        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                                            <Bot size={10} style={{ display: "inline", marginRight: 3 }} />
-                                            Bot
-                                        </div>
-                                        <div style={{ fontSize: 13, fontWeight: 600 }}>
-                                            @{b.bot?.username || "?"}
-                                        </div>
-                                    </div>
-                                    <div style={{ background: "var(--bg)", borderRadius: 8, padding: "10px 12px" }}>
-                                        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                                            <Users size={10} style={{ display: "inline", marginRight: 3 }} />
-                                            Qabul qiluvchilar
-                                        </div>
-                                        <div style={{ fontSize: 13, fontWeight: 600 }}>{b.targetCount?.toLocaleString() || 0}</div>
-                                    </div>
-                                    <div style={{ background: "var(--bg)", borderRadius: 8, padding: "10px 12px" }}>
-                                        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                                            <DollarSign size={10} style={{ display: "inline", marginRight: 3 }} />
-                                            Narx
-                                        </div>
-                                        <div style={{ fontSize: 13, fontWeight: 600 }}>
-                                            ${parseFloat(b.totalCost || 0).toFixed(2)}
-                                        </div>
-                                    </div>
-                                    {b.sentCount != null && (
-                                        <div style={{ background: "var(--bg)", borderRadius: 8, padding: "10px 12px" }}>
-                                            <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                                                Yuborildi
-                                            </div>
-                                            <div style={{ fontSize: 13, fontWeight: 600 }}>
-                                                {b.sentCount || 0} / {b.targetCount || 0}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Message preview */}
-                                {b.text && (
-                                    <div style={{
-                                        background: "var(--bg)", borderRadius: 8, padding: "12px 14px",
-                                        borderLeft: "3px solid var(--primary)"
-                                    }}>
-                                        <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
-                                            Xabar matni
-                                        </div>
-                                        <div style={{
-                                            fontSize: 13, color: "var(--text-main)", whiteSpace: "pre-wrap",
-                                            maxHeight: 120, overflow: "hidden", position: "relative"
-                                        }}>
-                                            {b.text.substring(0, 300)}{b.text.length > 300 ? "..." : ""}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Buttons preview */}
-                                {b.buttons && Array.isArray(b.buttons) && b.buttons.length > 0 && (
-                                    <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                        {b.buttons.map((btn: any, i: number) => (
-                                            <span key={i} style={{
-                                                fontSize: 11, padding: "4px 10px", borderRadius: 6,
-                                                background: btn.color === "green" ? "rgba(16,185,129,0.15)"
-                                                    : btn.color === "red" ? "rgba(239,68,68,0.15)"
-                                                    : "rgba(99,102,241,0.15)",
-                                                color: btn.color === "green" ? "#10b981"
-                                                    : btn.color === "red" ? "#ef4444"
-                                                    : "#818cf8",
-                                                border: "1px solid currentColor",
-                                            }}>
-                                                {btn.text}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Reject / Edit Modal */}
-            {rejectModal && (
-                <div style={{
-                    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
-                    display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-                }}>
-                    <div style={{
-                        background: "var(--card)", border: "1px solid var(--border)",
-                        borderRadius: 16, padding: 28, width: 440, maxWidth: "90vw"
-                    }}>
-                        <h3 style={{ marginBottom: 16, fontSize: 17, fontWeight: 700 }}>
-                            {rejectModal.mode === "reject" ? "❌ Rad etish" : "✏️ Tahrir so'rash"}
-                        </h3>
-                        <textarea
-                            rows={4}
-                            value={rejectReason}
-                            onChange={e => setRejectReason(e.target.value)}
-                            placeholder={rejectModal.mode === "reject" ? "Rad etish sababi..." : "Tahrirlanishi kerak bo'lgan narsa..."}
-                            style={{
-                                width: "100%", padding: "10px 14px", borderRadius: 10,
-                                background: "var(--bg)", border: "1px solid var(--border)",
-                                color: "var(--text-main)", fontSize: 13, resize: "vertical",
-                                outline: "none", fontFamily: "inherit", boxSizing: "border-box"
-                            }}
-                        />
-                        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-                            <button
-                                className={`btn ${rejectModal.mode === "reject" ? "btn-danger" : "btn-secondary"}`}
-                                disabled={!rejectReason.trim() || !!actionLoading}
-                                onClick={handleRejectOrEdit}
-                                style={{ flex: 1 }}
-                            >
-                                {actionLoading ? "..." : rejectModal.mode === "reject" ? "Rad etish" : "So'rov yuborish"}
-                            </button>
-                            <button
-                                className="btn btn-secondary"
-                                onClick={() => { setRejectModal(null); setRejectReason(""); }}
-                                style={{ flex: 1 }}
-                            >
-                                Bekor qilish
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            </div>
         </div>
     );
 }

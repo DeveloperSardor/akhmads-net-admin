@@ -26,4 +26,8 @@ export const contactService = {
         if (data?.data?.messages) return data.data;
         return { messages: data?.data || [], total: data?.total || 0 };
     },
+    async updateStatus(id: string, status: 'new' | 'read' | 'resolved'): Promise<ContactMessage> {
+        const response = await apiClient.patch(`/contact/messages/${id}/status`, { status });
+        return response.data;
+    },
 };

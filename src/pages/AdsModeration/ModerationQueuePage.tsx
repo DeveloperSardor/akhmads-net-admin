@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { usePendingAds, useApproveAd } from "../../hooks/queries/useAds";
 import { usePendingBots, useApproveBot } from "../../hooks/queries/useBots";
+import { usePendingBroadcasts, useApproveBroadcast } from "../../hooks/queries/useBroadcasts";
 
 const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("uz-UZ", {
@@ -58,13 +59,15 @@ const getContentTypeIcon = (type: string) => {
 // fmtDate already defined above
 
 export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => void }) {
-    const [tab, setTab] = useState<"ads" | "bots">("ads");
+    const [tab, setTab] = useState<"ads" | "bots" | "broadcasts">("ads");
 
     const { data: adsResponse, isLoading: adsLoading } = usePendingAds();
     const { data: botsResponse, isLoading: botsLoading } = usePendingBots();
+    const { data: broadcastsResponse, isLoading: broadcastsLoading } = usePendingBroadcasts();
 
     const approveAdMutation = useApproveAd();
     const approveBotMutation = useApproveBot();
+    const approveBroadcastMutation = useApproveBroadcast();
 
     const adsData = adsResponse as any;
     const ads = (adsData?.data || []) as any[];
@@ -74,9 +77,13 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
     const bots = (botsData?.data || []) as any[];
     const totalBots = botsData?.total || bots.length;
 
-    const totalInQueue = totalAds + totalBots;
+    const broadcastsData = broadcastsResponse as any;
+    const broadcasts = (broadcastsData?.data || []) as any[];
+    const totalBroadcasts = broadcastsData?.total || broadcasts.length;
 
-    if (adsLoading && botsLoading) {
+    const totalInQueue = totalAds + totalBots + totalBroadcasts;
+
+    if (adsLoading && botsLoading && broadcastsLoading) {
         return (
             <div className="elite-analytics-wrap">
                 <div className="page-head" style={{ marginBottom: 40 }}>
@@ -140,7 +147,7 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                 </div>
             </div>
 
-            <div className="elite-tabs-pill-wrap" style={{ marginBottom: 24, display: 'flex', gap: 12, background: 'rgba(255,255,255,0.03)', padding: 6, borderRadius: 16, width: 'max-content', border: '1px solid var(--border-color)' }}>
+            <div className="elite-tabs-pill-wrap" style={{ marginBottom: 24, display: 'flex', gap: 12, background: 'rgba(255,255,255,0.03)', padding: 6, borderRadius: 16, width: 'max-content', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
                 <button
                     className={`elite-tab-pill ${tab === "ads" ? "active" : ""}`}
                     onClick={() => setTab("ads")}
@@ -195,6 +202,34 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                         fontSize: 11
                     }}>
                         {botsLoading ? "..." : totalBots}
+                    </span>
+                </button>
+                <button
+                    className={`elite-tab-pill ${tab === "broadcasts" ? "active" : ""}`}
+                    onClick={() => setTab("broadcasts")}
+                    style={{
+                        padding: '10px 24px',
+                        borderRadius: 12,
+                        border: 'none',
+                        background: tab === "broadcasts" ? 'var(--blue)' : 'transparent',
+                        color: tab === "broadcasts" ? 'white' : 'var(--text-muted)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8
+                    }}
+                >
+                    <Globe size={16} />
+                    Broadcastlar
+                    <span style={{
+                        background: tab === "broadcasts" ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                        padding: '2px 8px',
+                        borderRadius: 6,
+                        fontSize: 11
+                    }}>
+                        {broadcastsLoading ? "..." : totalBroadcasts}
                     </span>
                 </button>
             </div>
@@ -382,6 +417,78 @@ export function ModerationQueuePage({ setModal }: { setModal: (modal: any) => vo
                                         </span>
                                         <span className="tag" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(59, 130, 246, 0.1)', color: 'var(--blue)' }}>
                                             <Users size={12} /> {(bot.totalMembers || bot.subscriberCount || 0).toLocaleString()} obuna
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                )}
+
+                {tab === "broadcasts" && (
+                    broadcastsLoading ? <div className="elite-loading">Yuklanmoqda...</div> :
+                        broadcasts.length === 0 ? (
+                            <div className="elite-card" style={{ padding: '60px 0', textAlign: 'center' }}>
+                                <div className="elite-empty-icon" style={{ margin: '0 auto 20px', width: 64, height: 64, borderRadius: '50%', border: '2px dashed var(--blue)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Check size={32} />
+                                </div>
+                                <h3 style={{ fontSize: 20, fontWeight: 700 }}>Hamma broadcastlar ko'rib chiqildi</h3>
+                                <p style={{ color: 'var(--text-muted)' }}>Hozircha yangi broadcastlar yo'q</p>
+                            </div>
+                        ) : broadcasts.map((broadcast: any) => (
+                            <div className="elite-card elite-queue-item-card" key={broadcast.id} style={{ display: 'flex', gap: 24, padding: 24, position: 'relative', overflow: 'hidden' }}>
+                                <div className="elite-queue-item-content" style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                        <div>
+                                            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'white', marginBottom: 4 }}>{broadcast.text?.slice(0, 60) || "Broadcast"}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <Users size={14} /> {broadcast.advertiser?.firstName || broadcast.advertiser?.username || 'Noma\'lum'}
+                                                </span>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <Bot size={14} /> @{broadcast.bot?.username || '?'}
+                                                </span>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <Clock size={14} /> {fmtDate(broadcast.createdAt)}
+                                                </span>
+                                                <span className="badge badge-gray" style={{ fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    {getContentTypeIcon(broadcast.contentType)} {broadcast.contentType}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="elite-action-suite" style={{ display: 'flex', gap: 8 }}>
+                                            <button
+                                                className="btn btn-success elite-action-btn"
+                                                onClick={() => approveBroadcastMutation.mutate(broadcast.id)}
+                                                disabled={approveBroadcastMutation.isPending}
+                                                style={{ padding: '8px 16px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}
+                                            >
+                                                <Check size={16} /> Tasdiqlash
+                                            </button>
+                                            <button
+                                                className="btn btn-ghost elite-action-btn"
+                                                onClick={() => setModal({ type: "request-edit-broadcast", data: broadcast })}
+                                                style={{ padding: '8px 16px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(59, 130, 246, 0.1)', color: 'var(--blue)', border: 'none' }}
+                                            >
+                                                <Edit size={16} /> Tahrirlash
+                                            </button>
+                                            <button
+                                                className="btn btn-danger elite-action-btn"
+                                                onClick={() => setModal({ type: "reject-broadcast", data: broadcast })}
+                                                style={{ padding: '8px 16px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none' }}
+                                            >
+                                                <X size={16} /> Rad etish
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, marginBottom: 16, background: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 10 }}>
+                                        {broadcast.text}
+                                    </p>
+                                    <div className="elite-queue-tags" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                        <span className="tag" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Target size={12} /> {(broadcast.targetCount || 0).toLocaleString()} user
+                                        </span>
+                                        <span className="tag" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                                            <DollarSign size={12} /> Narx: ${broadcast.totalCost || 0}
                                         </span>
                                     </div>
                                 </div>

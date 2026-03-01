@@ -31,6 +31,7 @@ export type Page =
     | "analytics"
     | "statistics"
     | "broadcasts"
+    | "pending-broadcasts"
     | "settings"
     | "admins"
     | "contact";
@@ -41,10 +42,11 @@ interface SidebarProps {
     pendingAdsCount: number;
     pendingBotsCount: number;
     pendingWithdrawalsCount: number;
+    pendingBroadcastsCount: number;
 }
 
 export const canAccess = (role: Role, page: Page): boolean => {
-    const modPages: Page[] = ["dashboard", "moderation-queue", "pending-ads", "pending-bots"];
+    const modPages: Page[] = ["dashboard", "moderation-queue", "pending-ads", "pending-bots", "pending-broadcasts"];
     const adminPages: Page[] = [...modPages, "withdrawals", "users", "all-ads", "all-bots", "categories", "analytics", "statistics", "broadcasts", "contact"];
     const superPages: Page[] = [...adminPages, "settings", "admins"];
     if (role === "superadmin") return superPages.includes(page);
@@ -53,15 +55,16 @@ export const canAccess = (role: Role, page: Page): boolean => {
     return false;
 };
 
-export function Sidebar({ isOpen, role, pendingAdsCount, pendingBotsCount, pendingWithdrawalsCount }: SidebarProps) {
+export function Sidebar({ isOpen, role, pendingAdsCount, pendingBotsCount, pendingWithdrawalsCount, pendingBroadcastsCount }: SidebarProps) {
     const location = useLocation();
     const currentPath = location.pathname.substring(1) || "dashboard";
 
     const navItems: { page: Page; label: string; icon: any; badge?: number; section?: string; path: string }[] = [
         { page: "dashboard" as Page, label: "Dashboard", icon: LayoutDashboard, section: "main", path: "/" },
-        { page: "moderation-queue" as Page, label: "Moderatsiya", icon: ShieldCheck, badge: pendingAdsCount + pendingBotsCount, section: "moderation", path: "/moderation-queue" },
+        { page: "moderation-queue" as Page, label: "Moderatsiya", icon: ShieldCheck, badge: pendingAdsCount + pendingBotsCount + pendingBroadcastsCount, section: "moderation", path: "/moderation-queue" },
         { page: "pending-ads" as Page, label: "Reklamalar", icon: Megaphone, badge: pendingAdsCount, section: "moderation", path: "/pending-ads" },
         { page: "pending-bots" as Page, label: "Botlar", icon: Bot, badge: pendingBotsCount, section: "moderation", path: "/pending-bots" },
+        { page: "pending-broadcasts" as Page, label: "Broadcastlar", icon: Radio, badge: pendingBroadcastsCount, section: "moderation", path: "/pending-broadcasts" },
         { page: "withdrawals" as Page, label: "To'lovlar", icon: Wallet, badge: pendingWithdrawalsCount, section: "finance", path: "/withdrawals" },
         { page: "users" as Page, label: "Foydalanuvchilar", icon: Users, section: "management", path: "/users" },
         { page: "all-ads" as Page, label: "Barcha Reklamalar", icon: Clapperboard, section: "management", path: "/all-ads" },
@@ -69,7 +72,7 @@ export function Sidebar({ isOpen, role, pendingAdsCount, pendingBotsCount, pendi
         { page: "categories" as Page, label: "Kategoriyalar", icon: Tags, section: "management", path: "/categories" },
         { page: "analytics" as Page, label: "Analitika", icon: BarChart3, section: "reports", path: "/analytics" },
         { page: "statistics" as Page, label: "Statistika", icon: Activity, section: "reports", path: "/statistics" },
-        { page: "broadcasts" as Page, label: "Broadcastlar", icon: Radio, section: "reports", path: "/broadcasts" },
+        { page: "broadcasts" as Page, label: "Barcha Broadcastlar", icon: Radio, section: "management", path: "/broadcasts" },
         { page: "contact" as Page, label: "Murojaatlar", icon: MessageSquare, section: "reports", path: "/contact" },
         { page: "admins" as Page, label: "Adminlar", icon: UserCog, section: "system", path: "/admins" },
         { page: "settings" as Page, label: "Sozlamalar", icon: Settings, section: "system", path: "/settings" },

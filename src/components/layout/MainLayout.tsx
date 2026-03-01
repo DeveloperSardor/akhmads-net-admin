@@ -6,6 +6,7 @@ import { Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePendingAds } from "../../hooks/queries/useAds";
 import { usePendingBots } from "../../hooks/queries/useBots";
+import { usePendingBroadcasts } from "../../hooks/queries/useBroadcasts";
 
 export function MainLayout() {
     const { user } = useAuth();
@@ -20,9 +21,11 @@ export function MainLayout() {
 
     const { data: pendingAdsRes } = usePendingAds();
     const { data: pendingBotsRes } = usePendingBots();
+    const { data: pendingBroadcastsRes } = usePendingBroadcasts();
 
     const pendingAdsCount = pendingAdsRes?.total ?? pendingAdsRes?.data?.length ?? 0;
     const pendingBotsCount = pendingBotsRes?.total ?? pendingBotsRes?.data?.length ?? 0;
+    const pendingBroadcastsCount = pendingBroadcastsRes?.total ?? pendingBroadcastsRes?.data?.length ?? 0;
     const pendingWithdrawalsCount = 0; // Use mock or query if exists
 
     return (
@@ -33,6 +36,7 @@ export function MainLayout() {
                 pendingAdsCount={pendingAdsCount}
                 pendingBotsCount={pendingBotsCount}
                 pendingWithdrawalsCount={pendingWithdrawalsCount}
+                pendingBroadcastsCount={pendingBroadcastsCount}
             />
 
             <main className={`main ${sidebarOpen ? "" : "expanded"}`}>

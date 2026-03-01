@@ -48,7 +48,7 @@ function downloadCSV(rows: any[], filename: string) {
 // ── Status badge helper ──────────────────────────────────────────────────────
 function BroadcastStatusBadge({ status }: { status: string }) {
     const map: Record<string, { label: string; color: string; icon: any }> = {
-        PENDING:   { label: "Kutilmoqda",  color: "#f59e0b", icon: Clock },
+        PENDING_REVIEW:   { label: "Kutilmoqda",  color: "#f59e0b", icon: Clock },
         APPROVED:  { label: "Tasdiqlandi", color: "#8b5cf6", icon: CheckCircle },
         RUNNING:   { label: "Yuborilmoqda",color: "#06b6d4", icon: Play },
         COMPLETED: { label: "Yakunlandi",  color: "#10b981", icon: CheckCircle },

@@ -10,6 +10,7 @@ import { DashboardPage } from "./pages/Dashboard/DashboardPage";
 import { ModerationQueuePage } from "./pages/AdsModeration/ModerationQueuePage";
 import { PendingAdsPage } from "./pages/AdsModeration/PendingAdsPage";
 import { PendingBotsPage } from "./pages/BotsModeration/PendingBotsPage";
+import { PendingBroadcastsPage } from "./pages/Broadcasts/PendingBroadcastsPage";
 import { WithdrawalsPage } from "./pages/Withdrawals/WithdrawalsPage";
 import { UsersPage } from "./pages/Users/UsersPage";
 import { AllAdsPage } from "./pages/AdsModeration/AllAdsPage";
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/moderation-queue" element={<ModerationQueuePage setModal={setModal} />} />
           <Route path="/pending-ads" element={<PendingAdsPage setModal={setModal} />} />
           <Route path="/pending-bots" element={<PendingBotsPage setModal={setModal} />} />
+          <Route path="/pending-broadcasts" element={<PendingBroadcastsPage setModal={setModal} />} />
           <Route path="/withdrawals" element={<WithdrawalsPage setModal={setModal} />} />
           <Route path="/users" element={<UsersPage setModal={setModal} />} />
           <Route path="/all-ads" element={<AllAdsPage />} />
