@@ -29,7 +29,7 @@ export function WithdrawalsPage({ setModal }: { setModal: (modal: any) => void }
     const withdrawals = (respData?.data || []) as any[];
 
     // We normally would fetch this summary natively, but here we can calculate it from response or separate endpoint
-    const pendingTotal = withdrawals.filter((w: any) => w.status === "REQUESTED").reduce((s: number, w: any) => s + w.amountToSend, 0);
+    const pendingTotal = withdrawals.filter((w: any) => w.status === "REQUESTED").reduce((s: number, w: any) => s + parseFloat(w.netAmount || 0), 0);
 
     return (
         <div>
@@ -65,18 +65,18 @@ export function WithdrawalsPage({ setModal }: { setModal: (modal: any) => void }
                                 <tr key={w.id}>
                                     <td>
                                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                            <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{(w.username || w.user?.username || "?")[0].toUpperCase()}</div>
-                                            <span className="mono" style={{ fontSize: 12 }}>@{w.username || w.user?.username || "noma'lum"}</span>
+                                            <div className="user-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{(w.user?.username || w.user?.firstName || "?")[0].toUpperCase()}</div>
+                                            <span className="mono" style={{ fontSize: 12 }}>@{w.user?.username || w.user?.firstName || "noma'lum"}</span>
                                         </div>
                                     </td>
                                     <td className="mono" style={{ fontWeight: 600 }}>${w.amount}</td>
                                     <td className="mono" style={{ color: "var(--red)" }}>-${w.fee}</td>
-                                    <td className="mono" style={{ fontWeight: 700, color: "var(--green)" }}>${w.amountToSend}</td>
+                                    <td className="mono" style={{ fontWeight: 700, color: "var(--green)" }}>${w.netAmount || w.amountToSend || "-"}</td>
                                     <td>
-                                        <div className="addr" title={w.walletAddress || w.payment?.address || "-"}>
-                                            {(w.walletAddress || w.payment?.address || "").length > 14
-                                                ? `${(w.walletAddress || w.payment?.address || "").slice(0, 8)}...${(w.walletAddress || w.payment?.address || "").slice(-6)}`
-                                                : (w.walletAddress || w.payment?.address || "-")
+                                        <div className="addr" title={w.address || "-"}>
+                                            {(w.address || "").length > 14
+                                                ? `${(w.address || "").slice(0, 8)}...${(w.address || "").slice(-6)}`
+                                                : (w.address || "-")
                                             }
                                         </div>
                                     </td>

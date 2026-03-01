@@ -163,13 +163,18 @@ export function ModalRenderer({ modal, setModal }: any) {
                             <div style={{ fontSize: 12, lineHeight: 1.6 }}>Avval USDT ni qo'lda jo'nating, keyin "Tasdiqlash" bosing!</div>
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-                            {[["Foydalanuvchi", `@${data.username}`], ["So'ragan miqdor", `$${data.amount} USDT`], ["Komissiya", `$${data.fee}`], ["Jo'natiladigan", `$${data.amountToSend} USDT`]].map(([l, v]) => (
+                            {[
+                                ["Foydalanuvchi", `@${data.user?.username || data.username || "?"}`],
+                                ["So'ragan miqdor", `$${data.amount} USDT`],
+                                ["Komissiya", `$${data.fee}`],
+                                ["Jo'natiladigan", `$${data.netAmount || data.amountToSend} USDT`]
+                            ].map(([l, v]) => (
                                 <div key={l}><span className="modal-label">{l}</span><div className="modal-value" style={{ fontWeight: 600 }}>{v}</div></div>
                             ))}
                         </div>
                         <div className="modal-field">
                             <span className="modal-label">Wallet manzili (BEP-20)</span>
-                            <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12 }}>{data.walletAddress}</div>
+                            <div className="modal-value addr addr-full" style={{ background: "var(--surface2)", padding: "8px 12px", borderRadius: 8, marginTop: 4, fontSize: 12 }}>{data.address || data.walletAddress || "-"}</div>
                         </div>
                         <div className="modal-actions">
                             <button className="btn btn-success" onClick={() => { approveWithdrawal.mutate(data.id); setModal(null); }} disabled={approveWithdrawal.isPending}>✓ Tasdiqlash (jo'natildi)</button>
