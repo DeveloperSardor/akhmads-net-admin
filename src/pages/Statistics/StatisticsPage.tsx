@@ -149,18 +149,18 @@ function ImpressionsTab() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                         <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                            {["#", "Username", "Ism", "Familiya", "Telegram ID", "Bot", "Til", "Vaqt"].map(h => (
+                            {["#", "Username", "Ism", "Familiya", "Telegram ID", "Bot", "Til", "Davlat", "Shahar", "Vaqt"].map(h => (
                                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
+                            <tr><td colSpan={10} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
                                 <div className="loading-spinner" style={{ width: 28, height: 28, margin: "0 auto" }} />
                             </td></tr>
                         ) : data.length === 0 ? (
-                            <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Ma'lumot topilmadi</td></tr>
+                            <tr><td colSpan={10} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Ma'lumot topilmadi</td></tr>
                         ) : data.map((row, i) => (
                             <tr key={row.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.15s" }}
                                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
@@ -173,6 +173,12 @@ function ImpressionsTab() {
                                 <td style={{ padding: "10px 12px", fontFamily: "monospace", fontSize: 12 }}>{row.telegramUserId}</td>
                                 <td style={{ padding: "10px 12px" }}>{row.bot?.username ? `@${row.bot.username}` : "—"}</td>
                                 <td style={{ padding: "10px 12px" }}>{row.languageCode || "—"}</td>
+                                <td style={{ padding: "10px 12px" }}>
+                                    {row.country && row.country !== "Unknown" ? row.country : "—"}
+                                </td>
+                                <td style={{ padding: "10px 12px" }}>
+                                    {row.city && row.city !== "Unknown" ? row.city : "—"}
+                                </td>
                                 <td style={{ padding: "10px 12px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
                                     {row.createdAt ? new Date(row.createdAt).toLocaleString("uz-UZ") : "—"}
                                 </td>
@@ -279,18 +285,18 @@ function ClicksTab() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead>
                         <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                            {["#", "Username", "Ism", "Familiya", "Telegram ID", "Bot", "Havola", "Vaqt"].map(h => (
+                            {["#", "Username", "Ism", "Familiya", "Telegram ID", "Bot", "Til", "Davlat", "Shahar", "IP", "Havola", "Vaqt"].map(h => (
                                 <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
+                            <tr><td colSpan={12} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
                                 <div className="loading-spinner" style={{ width: 28, height: 28, margin: "0 auto" }} />
                             </td></tr>
                         ) : data.length === 0 ? (
-                            <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Ma'lumot topilmadi</td></tr>
+                            <tr><td colSpan={12} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Ma'lumot topilmadi</td></tr>
                         ) : data.map((row, i) => (
                             <tr key={row.id} style={{ borderBottom: "1px solid var(--border)" }}
                                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
@@ -302,16 +308,26 @@ function ClicksTab() {
                                 <td style={{ padding: "10px 12px" }}>{row.lastName || "—"}</td>
                                 <td style={{ padding: "10px 12px", fontFamily: "monospace", fontSize: 12 }}>{row.telegramUserId}</td>
                                 <td style={{ padding: "10px 12px" }}>{row.bot?.username ? `@${row.bot.username}` : "—"}</td>
+                                <td style={{ padding: "10px 12px" }}>{row.languageCode || "—"}</td>
+                                <td style={{ padding: "10px 12px" }}>
+                                    {row.country && row.country !== "Unknown" ? row.country : "—"}
+                                </td>
+                                <td style={{ padding: "10px 12px" }}>
+                                    {row.city && row.city !== "Unknown" ? row.city : "—"}
+                                </td>
+                                <td style={{ padding: "10px 12px", fontFamily: "monospace", fontSize: 11, color: "var(--text-muted)" }}>
+                                    {row.ipAddress || "—"}
+                                </td>
                                 <td style={{ padding: "10px 12px", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {row.buttonUrl ? (
-                                        <a href={row.buttonUrl} target="_blank" rel="noreferrer"
+                                    {row.originalUrl ? (
+                                        <a href={row.originalUrl} target="_blank" rel="noreferrer"
                                             style={{ color: "#8b5cf6", fontSize: 12 }}>
-                                            {row.buttonUrl.slice(0, 40)}{row.buttonUrl.length > 40 ? "..." : ""}
+                                            {row.originalUrl.slice(0, 40)}{row.originalUrl.length > 40 ? "..." : ""}
                                         </a>
                                     ) : "—"}
                                 </td>
                                 <td style={{ padding: "10px 12px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                                    {row.createdAt ? new Date(row.createdAt).toLocaleString("uz-UZ") : "—"}
+                                    {row.clickedAt ? new Date(row.clickedAt).toLocaleString("uz-UZ") : row.createdAt ? new Date(row.createdAt).toLocaleString("uz-UZ") : "—"}
                                 </td>
                             </tr>
                         ))}
@@ -464,18 +480,18 @@ function BotUsersTab() {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                             <thead>
                                 <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                                    {["#", "Username", "Ism", "Familiya", "Telegram ID", "Til", "Oxirgi faollik"].map(h => (
+                                    {["#", "Username", "Ism", "Familiya", "Telegram ID", "Til", "Davlat", "Shahar", "Oxirgi faollik"].map(h => (
                                         <th key={h} style={{ padding: "10px 12px", textAlign: "left", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={7} style={{ textAlign: "center", padding: 40 }}>
+                                    <tr><td colSpan={9} style={{ textAlign: "center", padding: 40 }}>
                                         <div className="loading-spinner" style={{ width: 28, height: 28, margin: "0 auto" }} />
                                     </td></tr>
                                 ) : data.length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Foydalanuvchi topilmadi</td></tr>
+                                    <tr><td colSpan={9} style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Foydalanuvchi topilmadi</td></tr>
                                 ) : data.map((row, i) => (
                                     <tr key={row.id} style={{ borderBottom: "1px solid var(--border)" }}
                                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
@@ -487,6 +503,12 @@ function BotUsersTab() {
                                         <td style={{ padding: "10px 12px" }}>{row.lastName || "—"}</td>
                                         <td style={{ padding: "10px 12px", fontFamily: "monospace", fontSize: 12 }}>{row.telegramUserId}</td>
                                         <td style={{ padding: "10px 12px" }}>{row.languageCode || "—"}</td>
+                                        <td style={{ padding: "10px 12px" }}>
+                                            {row.country && row.country !== "Unknown" ? row.country : "—"}
+                                        </td>
+                                        <td style={{ padding: "10px 12px" }}>
+                                            {row.city && row.city !== "Unknown" ? row.city : "—"}
+                                        </td>
                                         <td style={{ padding: "10px 12px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
                                             {row.lastSeenAt ? new Date(row.lastSeenAt).toLocaleString("uz-UZ") : "—"}
                                         </td>
