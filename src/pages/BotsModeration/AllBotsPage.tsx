@@ -2,8 +2,16 @@ import { useState } from "react";
 import type { BotStatus } from "../../AppTypes";
 import { useAllBots } from "../../hooks/queries/useBots";
 import { API_BASE_URL } from "../../api/client";
-import { Bot, DollarSign, Calendar, TrendingUp, Cpu, Code } from "lucide-react";
-import axios from "axios";
+import {
+  Bot,
+  DollarSign,
+  Calendar,
+  TrendingUp,
+  Cpu,
+  Code,
+  Loader2,
+} from "lucide-react";
+import { adminService } from "../../api/services/admin.service";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("uz-UZ", {
@@ -39,22 +47,24 @@ export function AllBotsPage() {
   const responseData = response as any;
   const bots = (responseData?.data || []) as any[];
 
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
   const toggleIntegrationMode = async (botId: string, currentMode: string) => {
-    const newMode = currentMode === "MANUAL" ? "AUTO" : "MANUAL";
+    const newMode = (currentMode === "MANUAL" ? "AUTO" : "MANUAL") as
+      | "MANUAL"
+      | "AUTO";
     if (!window.confirm(`Bot rejimini ${newMode} ga o'zgartirmoqchimisiz?`))
       return;
 
+    setProcessingId(botId);
     try {
-      const token = localStorage.getItem("admin_token");
-      await axios.post(
-        `${API_BASE_URL}/admin/moderation/bots/${botId}/integration-mode`,
-        { integrationMode: newMode },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      await adminService.updateBotIntegrationMode(botId, newMode);
       window.location.reload();
     } catch (err) {
       console.error(err);
       alert("Xatolik yuz berdi");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -290,28 +300,25 @@ export function AllBotsPage() {
                   </td>
                   <td>
                     <button
+                      disabled={processingId === bot.id}
                       onClick={() =>
                         toggleIntegrationMode(bot.id, bot.integrationMode)
                       }
-                      className={`badge ${bot.integrationMode === "AUTO" ? "badge-green" : "badge-gray"}`}
+                      className={`elite-integration-toggle ${bot.integrationMode === "AUTO" ? "is-auto" : "is-manual"}`}
                       style={{
-                        cursor: "pointer",
-                        border: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        fontWeight: 700,
+                        cursor:
+                          processingId === bot.id ? "not-allowed" : "pointer",
+                        opacity: processingId === bot.id ? 0.7 : 1,
                       }}
                     >
-                      {bot.integrationMode === "AUTO" ? (
-                        <>
-                          <Cpu size={12} /> AUTO
-                        </>
+                      {processingId === bot.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : bot.integrationMode === "AUTO" ? (
+                        <Cpu size={12} />
                       ) : (
-                        <>
-                          <Code size={12} /> MANUAL
-                        </>
+                        <Code size={12} />
                       )}
+                      <span>{bot.integrationMode}</span>
                     </button>
                   </td>
                   <td>
@@ -413,6 +420,54 @@ export function AllBotsPage() {
                 .elite-tr:hover {
                     background: rgba(255, 255, 255, 0.02) !important;
                     transform: translateX(4px);
+                }
+
+                .elite-integration-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 14px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.05em;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1px solid transparent;
+                    position: relative;
+                    overflow: hidden;
+                    text-transform: uppercase;
+                }
+
+                .elite-integration-toggle.is-auto {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: #10b981;
+                    border-color: rgba(16, 185, 129, 0.2);
+                }
+                .elite-integration-toggle.is-auto:hover {
+                    background: rgba(16, 185, 129, 0.2);
+                    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+                }
+
+                .elite-integration-toggle.is-manual {
+                    background: rgba(59, 130, 246, 0.1);
+                    color: #3b82f6;
+                    border-color: rgba(59, 130, 246, 0.2);
+                }
+                .elite-integration-toggle.is-manual:hover {
+                    background: rgba(59, 130, 246, 0.2);
+                    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+                }
+
+                .elite-integration-toggle:active {
+                    transform: scale(0.95);
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .animate-spin {
+                    animation: spin 1s linear infinite;
                 }
             `}</style>
     </div>

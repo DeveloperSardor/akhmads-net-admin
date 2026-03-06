@@ -117,6 +117,14 @@ export const adminService = {
   async rejectBot(botId: string, reason?: string): Promise<void> {
     await apiClient.post(`/admin/moderation/bots/${botId}/reject`, { reason });
   },
+  async updateBotIntegrationMode(
+    botId: string,
+    integrationMode: "MANUAL" | "AUTO",
+  ): Promise<void> {
+    await apiClient.post(`/admin/moderation/bots/${botId}/integration-mode`, {
+      integrationMode,
+    });
+  },
 
   // --- Withdrawals ---
   async getPendingWithdrawals(
@@ -292,21 +300,39 @@ export const adminService = {
     };
   },
 
-  async getRevenueChart(period: string = "14d"): Promise<{ date: string; revenue: number; impressions: number; clicks: number }[]> {
+  async getRevenueChart(
+    period: string = "14d",
+  ): Promise<
+    { date: string; revenue: number; impressions: number; clicks: number }[]
+  > {
     const [overviewRes, pricingRes] = await Promise.allSettled([
       apiClient.get("/ads/stats/overview", { params: { period } }),
       apiClient.get("/admin/pricing/stats"),
     ]);
-    const statsArr: any[] = overviewRes.status === "fulfilled"
-      ? (overviewRes.value.data?.data?.stats ?? [])
-      : [];
-    const toFloat = (v: unknown) => { const n = parseFloat(String(v ?? 0)); return isNaN(n) ? 0 : n; };
-    const feePercent = pricingRes.status === "fulfilled"
-      ? toFloat((pricingRes.value.data?.data ?? pricingRes.value.data)?.platformFeePercentage ?? (pricingRes.value.data?.data ?? pricingRes.value.data)?.feePercentage ?? 10)
-      : 10;
+    const statsArr: any[] =
+      overviewRes.status === "fulfilled"
+        ? (overviewRes.value.data?.data?.stats ?? [])
+        : [];
+    const toFloat = (v: unknown) => {
+      const n = parseFloat(String(v ?? 0));
+      return isNaN(n) ? 0 : n;
+    };
+    const feePercent =
+      pricingRes.status === "fulfilled"
+        ? toFloat(
+            (pricingRes.value.data?.data ?? pricingRes.value.data)
+              ?.platformFeePercentage ??
+              (pricingRes.value.data?.data ?? pricingRes.value.data)
+                ?.feePercentage ??
+              10,
+          )
+        : 10;
 
     return statsArr.map((s) => ({
-      date: new Date(s.date).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" }),
+      date: new Date(s.date).toLocaleDateString("uz-UZ", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
       revenue: toFloat(s.spent) * (feePercent / 100),
       impressions: s.impressions ?? 0,
       clicks: s.clicks ?? 0,
