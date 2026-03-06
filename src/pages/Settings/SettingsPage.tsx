@@ -1,7 +1,69 @@
 import { useState, useEffect } from "react";
 import { getSettings, updateSettings } from "../../services/settings.service";
+import { authService } from "../../api/services/auth.service";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function SettingsPage({ showToast }: any) {
+    const { user, refreshUser } = useAuth();
+
+    // --- 2FA state ---
+    const [twoFaStep, setTwoFaStep] = useState<"idle" | "setup" | "confirming">("idle");
+    const [twoFaSecret, setTwoFaSecret] = useState("");
+    const [twoFaQr, setTwoFaQr] = useState("");
+    const [twoFaCode, setTwoFaCode] = useState("");
+    const [twoFaLoading, setTwoFaLoading] = useState(false);
+    const [twoFaDisableConfirm, setTwoFaDisableConfirm] = useState(false);
+
+    const handle2faSetup = async () => {
+        try {
+            setTwoFaLoading(true);
+            const { secret, qrCodeUrl } = await authService.setup2FA();
+            setTwoFaSecret(secret);
+            setTwoFaQr(qrCodeUrl);
+            setTwoFaCode("");
+            setTwoFaStep("setup");
+        } catch {
+            showToast("2FA sozlashda xatolik", "error");
+        } finally {
+            setTwoFaLoading(false);
+        }
+    };
+
+    const handle2faConfirm = async () => {
+        if (twoFaCode.length !== 6) {
+            showToast("6 xonali kodni kiriting", "error");
+            return;
+        }
+        try {
+            setTwoFaLoading(true);
+            await authService.confirm2FA(twoFaSecret, twoFaCode);
+            await refreshUser();
+            setTwoFaStep("idle");
+            setTwoFaSecret("");
+            setTwoFaQr("");
+            setTwoFaCode("");
+            showToast("2FA muvaffaqiyatli yoqildi", "success");
+        } catch {
+            showToast("Noto'g'ri kod. Qaytadan urinib ko'ring.", "error");
+        } finally {
+            setTwoFaLoading(false);
+        }
+    };
+
+    const handle2faDisable = async () => {
+        try {
+            setTwoFaLoading(true);
+            await authService.disable2FA();
+            await refreshUser();
+            setTwoFaDisableConfirm(false);
+            showToast("2FA o'chirildi", "success");
+        } catch {
+            showToast("2FA o'chirishda xatolik", "error");
+        } finally {
+            setTwoFaLoading(false);
+        }
+    };
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState({
@@ -295,6 +357,147 @@ export function SettingsPage({ showToast }: any) {
                                 <div className="knob" />
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* 5. IKKI BOSQICHLI TEKSHIRUV (2FA) */}
+                <div className="settings-card">
+                    <div className="settings-section-title">
+                        <span>🔐</span> Ikki bosqichli tekshiruv (2FA)
+                    </div>
+
+                    <div className="settings-item" style={{ alignItems: "flex-start", flexDirection: "column", gap: 16 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                            <div className="settings-item-info">
+                                <div className="settings-item-label">Holati</div>
+                                <div className="settings-item-hint">
+                                    Authenticator ilovasi orqali kirish paytida qo'shimcha tasdiqlash
+                                </div>
+                            </div>
+                            <div style={{
+                                padding: "4px 12px",
+                                borderRadius: 20,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: user?.twoFactorEnabled ? "rgba(34, 197, 94, 0.15)" : "rgba(100,100,100,0.15)",
+                                color: user?.twoFactorEnabled ? "var(--success)" : "var(--text-dim)",
+                                border: `1px solid ${user?.twoFactorEnabled ? "rgba(34, 197, 94, 0.3)" : "rgba(100,100,100,0.2)"}`,
+                                whiteSpace: "nowrap",
+                            }}>
+                                {user?.twoFactorEnabled ? "✓ Yoqilgan" : "O'chirilgan"}
+                            </div>
+                        </div>
+
+                        {/* SETUP FLOW */}
+                        {twoFaStep === "setup" && (
+                            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div style={{ padding: 14, background: "rgba(139, 92, 246, 0.06)", borderRadius: 12, border: "1px solid rgba(139, 92, 246, 0.2)" }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
+                                        <strong style={{ color: "var(--text-primary)" }}>1.</strong> Google Authenticator, Authy yoki boshqa TOTP ilovasini oching
+                                        <br />
+                                        <strong style={{ color: "var(--text-primary)" }}>2.</strong> QR kodni skanerlang yoki quyidagi kalit kiriting:
+                                    </div>
+                                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+                                        {twoFaQr && (
+                                            <img src={twoFaQr} alt="2FA QR Code"
+                                                style={{ width: 160, height: 160, borderRadius: 8, border: "1px solid rgba(139,92,246,0.3)", background: "#fff", padding: 4 }}
+                                            />
+                                        )}
+                                        <div style={{ flex: 1, minWidth: 160 }}>
+                                            <div style={{ fontSize: 11, color: "var(--text-dim)", marginBottom: 6 }}>Qo'lda kiritish uchun kalit:</div>
+                                            <code style={{
+                                                display: "block", padding: "8px 12px",
+                                                background: "rgba(0,0,0,0.2)", borderRadius: 8,
+                                                fontSize: 13, letterSpacing: 2,
+                                                color: "var(--accent-primary)", wordBreak: "break-all",
+                                                fontFamily: "monospace"
+                                            }}>
+                                                {twoFaSecret}
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                                        <strong style={{ color: "var(--text-primary)" }}>3.</strong> Ilovada ko'rsatilgan 6 xonali kodni kiriting:
+                                    </div>
+                                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                                        <input
+                                            className="modal-input mono"
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder="000 000"
+                                            maxLength={6}
+                                            value={twoFaCode}
+                                            onChange={e => setTwoFaCode(e.target.value.replace(/\D/g, ""))}
+                                            style={{ width: 140, letterSpacing: 4, textAlign: "center", fontSize: 18 }}
+                                        />
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={handle2faConfirm}
+                                            disabled={twoFaLoading || twoFaCode.length !== 6}
+                                        >
+                                            {twoFaLoading ? "Tekshirilmoqda..." : "Tasdiqlash"}
+                                        </button>
+                                        <button
+                                            className="btn btn-sm"
+                                            style={{ background: "rgba(255,255,255,0.05)", color: "var(--text-dim)" }}
+                                            onClick={() => { setTwoFaStep("idle"); setTwoFaSecret(""); setTwoFaQr(""); setTwoFaCode(""); }}
+                                        >
+                                            Bekor qilish
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* IDLE — not enabled */}
+                        {twoFaStep === "idle" && !user?.twoFactorEnabled && (
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={handle2faSetup}
+                                disabled={twoFaLoading}
+                            >
+                                {twoFaLoading ? "Yuklanmoqda..." : "2FA ni yoqish"}
+                            </button>
+                        )}
+
+                        {/* IDLE — enabled */}
+                        {twoFaStep === "idle" && user?.twoFactorEnabled && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
+                                {!twoFaDisableConfirm ? (
+                                    <button
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() => setTwoFaDisableConfirm(true)}
+                                        style={{ alignSelf: "flex-start" }}
+                                    >
+                                        2FA ni o'chirish
+                                    </button>
+                                ) : (
+                                    <div style={{ padding: 14, background: "rgba(239, 68, 68, 0.07)", borderRadius: 12, border: "1px solid rgba(239,68,68,0.25)" }}>
+                                        <div style={{ fontSize: 13, color: "var(--danger-text)", marginBottom: 12 }}>
+                                            ⚠️ Haqiqatan ham 2FA ni o'chirmoqchimisiz? Bu hisobingizni kamroq himoyalangan qiladi.
+                                        </div>
+                                        <div style={{ display: "flex", gap: 10 }}>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={handle2faDisable}
+                                                disabled={twoFaLoading}
+                                            >
+                                                {twoFaLoading ? "O'chirilmoqda..." : "Ha, o'chirish"}
+                                            </button>
+                                            <button
+                                                className="btn btn-sm"
+                                                style={{ background: "rgba(255,255,255,0.05)", color: "var(--text-dim)" }}
+                                                onClick={() => setTwoFaDisableConfirm(false)}
+                                            >
+                                                Bekor qilish
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 

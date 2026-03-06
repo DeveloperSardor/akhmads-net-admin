@@ -2,12 +2,8 @@ import { useState } from "react";
 import type { BotStatus } from "../../AppTypes";
 import { useAllBots } from "../../hooks/queries/useBots";
 import { API_BASE_URL } from "../../api/client";
-import {
-  Bot,
-  DollarSign,
-  Calendar,
-  TrendingUp,
-} from "lucide-react";
+import { Bot, DollarSign, Calendar, TrendingUp, Cpu, Code } from "lucide-react";
+import axios from "axios";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("uz-UZ", {
@@ -42,6 +38,25 @@ export function AllBotsPage() {
   );
   const responseData = response as any;
   const bots = (responseData?.data || []) as any[];
+
+  const toggleIntegrationMode = async (botId: string, currentMode: string) => {
+    const newMode = currentMode === "MANUAL" ? "AUTO" : "MANUAL";
+    if (!window.confirm(`Bot rejimini ${newMode} ga o'zgartirmoqchimisiz?`))
+      return;
+
+    try {
+      const token = localStorage.getItem("admin_token");
+      await axios.post(
+        `${API_BASE_URL}/admin/moderation/bots/${botId}/integration-mode`,
+        { integrationMode: newMode },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Xatolik yuz berdi");
+    }
+  };
 
   return (
     <div className="elite-analytics-wrap">
@@ -110,6 +125,7 @@ export function AllBotsPage() {
                 <th>EGASI</th>
                 <th>STATUS</th>
                 <th>KATEGORIYA</th>
+                <th>REJIM</th>
                 <th>STATISTIKA</th>
                 <th>DAROMAD</th>
                 <th style={{ textAlign: "right", paddingRight: 32 }}>SANA</th>
@@ -271,6 +287,32 @@ export function AllBotsPage() {
                     >
                       #{bot.category}
                     </span>
+                  </td>
+                  <td>
+                    <button
+                      onClick={() =>
+                        toggleIntegrationMode(bot.id, bot.integrationMode)
+                      }
+                      className={`badge ${bot.integrationMode === "AUTO" ? "badge-green" : "badge-gray"}`}
+                      style={{
+                        cursor: "pointer",
+                        border: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {bot.integrationMode === "AUTO" ? (
+                        <>
+                          <Cpu size={12} /> AUTO
+                        </>
+                      ) : (
+                        <>
+                          <Code size={12} /> MANUAL
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td>
                     <div

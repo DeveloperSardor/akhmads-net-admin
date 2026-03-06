@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     DollarSign,
     Zap,
@@ -13,6 +14,8 @@ import {
 import {
     AreaChart,
     Area,
+    BarChart,
+    Bar,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -20,7 +23,15 @@ import {
     ResponsiveContainer,
     Legend,
 } from "recharts";
-import { useAdminStats, useAdminAnalytics } from "../../hooks/queries/useAdmin";
+import { useAdminStats, useAdminAnalytics, useAdminRevenueChart } from "../../hooks/queries/useAdmin";
+
+const PERIOD_OPTIONS = [
+    { label: "1 kun", value: "1d" },
+    { label: "7 kun", value: "7d" },
+    { label: "1 oy", value: "30d" },
+    { label: "3 oy", value: "90d" },
+    { label: "1 yil", value: "365d" },
+];
 
 type ChartEntry = { date: string; impressions: number; spent: number; clicks: number };
 
@@ -116,8 +127,14 @@ function GrowthChart({ rawData }: { rawData?: ChartEntry[] }) {
 }
 
 export function AnalyticsPage() {
+    const [revenuePeriod, setRevenuePeriod] = useState("30d");
     const { data: stats, isLoading: loadingStats, isError: errorStats } = useAdminStats();
     const { data: analytics, isLoading: loadingAnalytics, isError: errorAnalytics } = useAdminAnalytics();
+    const { data: revenueData } = useAdminRevenueChart(revenuePeriod);
+
+    const revenueChartData = revenueData ?? [];
+    const totalRevenue = revenueChartData.reduce((sum, d) => sum + d.revenue, 0);
+    const totalSpent = analytics?.chartData?.reduce((sum, d) => sum + d.spent, 0) ?? 0;
 
     const categories = analytics?.categories || [];
     const maxVal = Math.max(...categories.map(c => c.value), 1);
@@ -306,6 +323,94 @@ export function AnalyticsPage() {
 
             {/* Growth chart */}
             <GrowthChart rawData={analytics?.chartData as ChartEntry[] | undefined} />
+
+            {/* Platform Revenue Chart */}
+            <div className="elite-card" style={{ marginTop: 32, padding: 32 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div className="elite-stat-icon-wrap" style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
+                            <TrendingUp size={22} />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>Platforma daromadi</h3>
+                            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Umumiy pul aylanmasi va platforma ulushi</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {[...PERIOD_OPTIONS, { label: 'Barchasi', value: 'all' }].map((opt) => (
+                            <button
+                                key={opt.value}
+                                onClick={() => setRevenuePeriod(opt.value)}
+                                style={{
+                                    padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                    fontSize: 12, fontWeight: 600,
+                                    background: revenuePeriod === opt.value ? '#f59e0b' : 'rgba(255,255,255,0.06)',
+                                    color: revenuePeriod === opt.value ? '#000' : 'rgba(255,255,255,0.4)',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+                    {[
+                        { label: 'Jami aylanma', value: `$${totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: '#3b82f6' },
+                        { label: 'Platforma daromadi', value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, color: '#f59e0b' },
+                        { label: 'Fee foizi', value: `${stats?.platformFeePercentage ?? 0}%`, color: '#10b981' },
+                    ].map((item, i) => (
+                        <div key={i} style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>{item.label}</div>
+                            <div style={{ fontSize: 22, fontWeight: 800, color: item.color }}>{item.value}</div>
+                        </div>
+                    ))}
+                </div>
+
+                {revenueChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                        <AreaChart data={revenueChartData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="gradRev" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`} />
+                            <Tooltip
+                                contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 13 }}
+                            />
+                            <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', paddingTop: 12 }} />
+                            <Area type="monotone" dataKey="revenue" name="Platforma daromadi" stroke="#f59e0b" strokeWidth={2.5} fill="url(#gradRev)" dot={false} activeDot={{ r: 5, fill: '#f59e0b' }} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>
+                        Ma'lumot yuklanmoqda...
+                    </div>
+                )}
+
+                {/* Revenue vs Impressions bar chart */}
+                {revenueChartData.length > 0 && (
+                    <div style={{ marginTop: 32 }}>
+                        <h4 style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 16 }}>Taassurotlar va kliklar dinamikasi</h4>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={revenueChartData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
+                                <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 13 }} />
+                                <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', paddingTop: 12 }} />
+                                <Bar dataKey="impressions" name="Ko'rishlar" fill="rgba(139,92,246,0.7)" radius={[3, 3, 0, 0]} />
+                                <Bar dataKey="clicks" name="Kliklar" fill="rgba(6,182,212,0.7)" radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

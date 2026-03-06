@@ -20,6 +20,17 @@ export const useAds = (params: PaginatedRequest & { status?: string } = {}) => {
   });
 };
 
+export const useCampaigns = (
+  params: PaginatedRequest & { status?: string; type?: string } = {},
+) => {
+  return useQuery({
+    queryKey: ["campaigns", JSON.stringify(params)],
+    queryFn: async () => {
+      return await adminService.getAllCampaigns(params);
+    },
+  });
+};
+
 export const useAdDetails = (id: string) => {
   return useQuery({
     queryKey: adsKeys.detail(id),

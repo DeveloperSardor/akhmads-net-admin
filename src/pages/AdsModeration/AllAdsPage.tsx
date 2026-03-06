@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  useAds,
+  useCampaigns,
   usePauseAd,
   useResumeAd,
   useDeleteAd,
@@ -14,6 +14,7 @@ import {
   DollarSign,
   Calendar,
   Users,
+  Send,
 } from "lucide-react";
 
 const fmtDate = (iso: string) =>
@@ -48,9 +49,15 @@ const adStatusMap: Record<string, string> = {
 
 export function AllAdsPage() {
   const [statusFilter, setStatusFilter] = useState<AdStatus | "all">("all");
-  const { data: response, isLoading } = useAds(
-    statusFilter !== "all" ? { status: statusFilter } : {},
+  const [typeFilter, setTypeFilter] = useState<"all" | "AD" | "BROADCAST">(
+    "all",
   );
+
+  const { data: response, isLoading } = useCampaigns({
+    status: statusFilter,
+    type: typeFilter,
+  });
+
   const ads = (response?.data || []) as any[];
 
   const pauseMutation = usePauseAd();
@@ -58,6 +65,10 @@ export function AllAdsPage() {
   const deleteMutation = useDeleteAd();
 
   const handleTogglePause = (ad: any) => {
+    if (ad.campaignType === "BROADCAST") {
+      alert("Rassilkalarni to'xtatish hozircha mavjud emas");
+      return;
+    }
     if (ad.status === "RUNNING") {
       pauseMutation.mutate(ad.id, {
         onSuccess: () => alert("Reklama to'xtatildi"),
@@ -99,53 +110,96 @@ export function AllAdsPage() {
             <span style={{ color: "var(--blue)", fontWeight: 700 }}>
               {ads.length} ta
             </span>{" "}
-            reklama mavjud
+            reklama va rassilka mavjud
           </p>
         </div>
       </div>
 
       <div
-        className="elite-tabs-pill-wrap"
-        style={{
-          marginBottom: 32,
-          display: "flex",
-          gap: 10,
-          background: "rgba(255,255,255,0.03)",
-          padding: 6,
-          borderRadius: 16,
-          width: "max-content",
-          border: "1px solid var(--border-color)",
-          flexWrap: "wrap",
-        }}
+        style={{ display: "flex", gap: 20, marginBottom: 32, flexWrap: "wrap" }}
       >
-        {[
-          "all",
-          "SUBMITTED",
-          "APPROVED",
-          "RUNNING",
-          "PAUSED",
-          "COMPLETED",
-          "REJECTED",
-        ].map((s) => (
-          <button
-            key={s}
-            className={`elite-tab-pill ${statusFilter === s ? "active" : ""}`}
-            onClick={() => setStatusFilter(s as any)}
-            style={{
-              padding: "10px 22px",
-              borderRadius: 12,
-              border: "none",
-              background: statusFilter === s ? "var(--blue)" : "transparent",
-              color: statusFilter === s ? "white" : "var(--text-muted)",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-          >
-            {adStatusMap[s] || s}
-          </button>
-        ))}
+        {/* Type Filter */}
+        <div
+          className="elite-tabs-pill-wrap"
+          style={{
+            display: "flex",
+            gap: 6,
+            background: "rgba(255,255,255,0.03)",
+            padding: 6,
+            borderRadius: 16,
+            width: "max-content",
+            border: "1px solid var(--border-color)",
+          }}
+        >
+          {[
+            { id: "all", label: "Hammasi" },
+            { id: "AD", label: "Views" },
+            { id: "BROADCAST", label: "Rassilka" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              className={`elite-tab-pill ${typeFilter === t.id ? "active" : ""}`}
+              onClick={() => setTypeFilter(t.id as any)}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 10,
+                border: "none",
+                background: typeFilter === t.id ? "var(--blue)" : "transparent",
+                color: typeFilter === t.id ? "white" : "var(--text-muted)",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter */}
+        <div
+          className="elite-tabs-pill-wrap"
+          style={{
+            display: "flex",
+            gap: 6,
+            background: "rgba(255,255,255,0.03)",
+            padding: 6,
+            borderRadius: 16,
+            width: "max-content",
+            border: "1px solid var(--border-color)",
+          }}
+        >
+          {[
+            "all",
+            "SUBMITTED",
+            "APPROVED",
+            "RUNNING",
+            "PAUSED",
+            "COMPLETED",
+            "REJECTED",
+          ].map((s) => (
+            <button
+              key={s}
+              className={`elite-tab-pill ${statusFilter === s ? "active" : ""}`}
+              onClick={() => setStatusFilter(s as any)}
+              style={{
+                padding: "8px 18px",
+                borderRadius: 10,
+                border: "none",
+                background:
+                  statusFilter === s ? "var(--purple)" : "transparent",
+                color: statusFilter === s ? "white" : "var(--text-muted)",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {adStatusMap[s] || s}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="elite-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -215,12 +269,25 @@ export function AllAdsPage() {
                           width: 44,
                           height: 44,
                           borderRadius: 14,
-                          background: "rgba(59, 130, 246, 0.1)",
-                          color: "var(--blue)",
+                          background:
+                            ad.campaignType === "BROADCAST"
+                              ? "rgba(139, 92, 246, 0.1)"
+                              : "rgba(59, 130, 246, 0.1)",
+                          color:
+                            ad.campaignType === "BROADCAST"
+                              ? "#8b5cf6"
+                              : "var(--blue)",
                           flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        <Megaphone size={20} />
+                        {ad.campaignType === "BROADCAST" ? (
+                          <Send size={20} />
+                        ) : (
+                          <Megaphone size={20} />
+                        )}
                       </div>
                       <div>
                         <div
@@ -236,14 +303,44 @@ export function AllAdsPage() {
                         </div>
                         <div
                           style={{
-                            fontSize: 12,
-                            color: "rgba(255,255,255,0.5)",
-                            textTransform: "uppercase",
-                            fontWeight: 700,
-                            letterSpacing: "0.05em",
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "center",
                           }}
                         >
-                          {ad.contentType}
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color:
+                                ad.campaignType === "BROADCAST"
+                                  ? "#8b5cf6"
+                                  : "var(--blue)",
+                              background:
+                                ad.campaignType === "BROADCAST"
+                                  ? "rgba(139, 92, 246, 0.1)"
+                                  : "rgba(59, 130, 246, 0.1)",
+                              padding: "1px 6px",
+                              borderRadius: 4,
+                              textTransform: "uppercase",
+                              fontWeight: 800,
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            {ad.campaignType === "BROADCAST"
+                              ? "Rassilka"
+                              : "Views"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "rgba(255,255,255,0.5)",
+                              textTransform: "uppercase",
+                              fontWeight: 700,
+                              letterSpacing: "0.05em",
+                            }}
+                          >
+                            {ad.contentType}
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -23,6 +23,11 @@ export const adminStatsKeys = {
 
 export const adminAnalyticsKeys = {
     all: ["adminAnalytics"] as const,
+    period: (p: string) => ["adminAnalytics", p] as const,
+};
+
+export const adminRevenueKeys = {
+    period: (p: string) => ["adminRevenue", p] as const,
 };
 
 // --- Users ---
@@ -113,9 +118,16 @@ export const useAdminStats = () => {
     });
 };
 
-export const useAdminAnalytics = () => {
+export const useAdminAnalytics = (period?: string) => {
     return useQuery({
-        queryKey: adminAnalyticsKeys.all,
-        queryFn: () => adminService.getAdminAnalytics(),
+        queryKey: period ? adminAnalyticsKeys.period(period) : adminAnalyticsKeys.all,
+        queryFn: () => adminService.getAdminAnalytics(period),
+    });
+};
+
+export const useAdminRevenueChart = (period: string = "14d") => {
+    return useQuery({
+        queryKey: adminRevenueKeys.period(period),
+        queryFn: () => adminService.getRevenueChart(period),
     });
 };

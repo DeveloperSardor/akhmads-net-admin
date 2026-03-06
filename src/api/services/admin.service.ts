@@ -56,6 +56,15 @@ export const adminService = {
     );
     return response.data;
   },
+  async getAllCampaigns(
+    params?: PaginatedRequest & { status?: string; type?: string },
+  ): Promise<PaginatedResponse<any>> {
+    const response = await apiClient.get<PaginatedResponse<any>>(
+      "/admin/moderation/campaigns/all",
+      { params },
+    );
+    return response.data;
+  },
   async getModerationAdDetails(adId: string): Promise<AdResponse> {
     const response = await apiClient.get<AdResponse>(
       `/admin/moderation/ads/${adId}`,
@@ -264,8 +273,9 @@ export const adminService = {
     };
   },
 
-  async getAdminAnalytics(): Promise<AdminAnalytics> {
-    const response = await apiClient.get("/ads/stats/overview");
+  async getAdminAnalytics(period?: string): Promise<AdminAnalytics> {
+    const params = period ? { period } : {};
+    const response = await apiClient.get("/ads/stats/overview", { params });
     const statsArr: any[] = response.data?.data?.stats ?? [];
 
     return {
@@ -280,6 +290,27 @@ export const adminService = {
         clicks: s.clicks ?? 0,
       })),
     };
+  },
+
+  async getRevenueChart(period: string = "14d"): Promise<{ date: string; revenue: number; impressions: number; clicks: number }[]> {
+    const [overviewRes, pricingRes] = await Promise.allSettled([
+      apiClient.get("/ads/stats/overview", { params: { period } }),
+      apiClient.get("/admin/pricing/stats"),
+    ]);
+    const statsArr: any[] = overviewRes.status === "fulfilled"
+      ? (overviewRes.value.data?.data?.stats ?? [])
+      : [];
+    const toFloat = (v: unknown) => { const n = parseFloat(String(v ?? 0)); return isNaN(n) ? 0 : n; };
+    const feePercent = pricingRes.status === "fulfilled"
+      ? toFloat((pricingRes.value.data?.data ?? pricingRes.value.data)?.platformFeePercentage ?? (pricingRes.value.data?.data ?? pricingRes.value.data)?.feePercentage ?? 10)
+      : 10;
+
+    return statsArr.map((s) => ({
+      date: new Date(s.date).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit" }),
+      revenue: toFloat(s.spent) * (feePercent / 100),
+      impressions: s.impressions ?? 0,
+      clicks: s.clicks ?? 0,
+    }));
   },
 
   // --- Detailed Stats ---
@@ -335,6 +366,12 @@ export const adminService = {
   },
   async requestBroadcastEdit(id: string, feedback: string): Promise<void> {
     await apiClient.post(`/admin/broadcasts/${id}/request-edit`, { feedback });
+  },
+  async pauseBroadcast(id: string): Promise<void> {
+    await apiClient.post(`/admin/broadcasts/${id}/pause`);
+  },
+  async resumeBroadcast(id: string): Promise<void> {
+    await apiClient.post(`/admin/broadcasts/${id}/resume`);
   },
   async getAllBots(params?: any): Promise<any> {
     const response = await apiClient.get("/admin/moderation/bots/all", {

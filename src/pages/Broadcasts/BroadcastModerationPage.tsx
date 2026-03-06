@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { adminService } from "../../api/services/admin.service";
-import { Radio } from "lucide-react";
+import { Radio, Pause, Play } from "lucide-react";
 
 type TabStatus = "PENDING_REVIEW" | "APPROVED" | "RUNNING" | "COMPLETED" | "REJECTED" | "DRAFT" | "all";
 
@@ -47,6 +47,7 @@ export function BroadcastModerationPage() {
     const [broadcasts, setBroadcasts] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     const load = async (status: TabStatus) => {
         setLoading(true);
@@ -86,6 +87,30 @@ export function BroadcastModerationPage() {
         load(initialTab);
     }, []);
 
+    const handlePause = async (id: string) => {
+        setActionLoading(id + "-pause");
+        try {
+            await adminService.pauseBroadcast(id);
+            load(statusFilter);
+        } catch (e: any) {
+            alert(e?.response?.data?.message || "Xatolik");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleResume = async (id: string) => {
+        setActionLoading(id + "-resume");
+        try {
+            await adminService.resumeBroadcast(id);
+            load(statusFilter);
+        } catch (e: any) {
+            alert(e?.response?.data?.message || "Xatolik");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     return (
         <div>
             <div className="page-head">
@@ -119,6 +144,7 @@ export function BroadcastModerationPage() {
                                 <th>Qabul qildi / Qamrov</th>
                                 <th>Narxi</th>
                                 <th>Sana</th>
+                                <th>Amallar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -171,6 +197,32 @@ export function BroadcastModerationPage() {
                                     </td>
                                     <td style={{ fontSize: 11, color: "var(--text2)" }}>
                                         {fmtDate(b.createdAt)}
+                                    </td>
+                                    <td>
+                                        <div style={{ display: "flex", gap: 6 }}>
+                                            {b.status === "RUNNING" && (
+                                                <button
+                                                    className="btn btn-sm btn-ghost"
+                                                    style={{ color: "var(--amber)", display: "flex", alignItems: "center", gap: 4 }}
+                                                    disabled={actionLoading === b.id + "-pause"}
+                                                    onClick={() => handlePause(b.id)}
+                                                >
+                                                    <Pause size={12} />
+                                                    Pauza
+                                                </button>
+                                            )}
+                                            {b.status === "PAUSED" && (
+                                                <button
+                                                    className="btn btn-sm btn-ghost"
+                                                    style={{ color: "var(--green)", display: "flex", alignItems: "center", gap: 4 }}
+                                                    disabled={actionLoading === b.id + "-resume"}
+                                                    onClick={() => handleResume(b.id)}
+                                                >
+                                                    <Play size={12} />
+                                                    Davom
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
