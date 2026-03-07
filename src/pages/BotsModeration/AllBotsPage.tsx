@@ -67,8 +67,9 @@ export function AllBotsPage() {
 
   const responseData = response as any;
   const bots = (responseData?.data || []) as any[];
-  const total = responseData?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+  const total = responseData?.pagination?.total ?? responseData?.total ?? 0;
+  const totalPages =
+    responseData?.pagination?.totalPages ?? Math.ceil(total / limit);
 
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -104,7 +105,7 @@ export function AllBotsPage() {
           <p className="section-sub" style={{ fontSize: 16 }}>
             Hozirda tizimda jami{" "}
             <span style={{ color: "var(--blue)", fontWeight: 700 }}>
-              {bots.length} ta
+              {total} ta
             </span>{" "}
             ulanish mavjud
           </p>

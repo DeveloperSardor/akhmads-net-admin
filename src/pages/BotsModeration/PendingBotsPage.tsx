@@ -54,8 +54,9 @@ export function PendingBotsPage({
   const approveBot = useApproveBot();
   const responseData = response as any;
   const bots = (responseData?.data || []) as any[];
-  const total = responseData?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+  const total = responseData?.pagination?.total ?? responseData?.total ?? 0;
+  const totalPages =
+    responseData?.pagination?.totalPages ?? Math.ceil(total / limit);
 
   // Calculate queue stats
   const avgSubscribers =
