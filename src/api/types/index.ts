@@ -1,6 +1,7 @@
 export interface PaginatedRequest {
   limit?: number;
   offset?: number;
+  search?: string;
 }
 
 export interface PaginatedResponse<T> {

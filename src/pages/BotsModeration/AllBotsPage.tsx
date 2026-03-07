@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { BotStatus } from "../../AppTypes";
 import { useAllBots } from "../../hooks/queries/useBots";
 import { API_BASE_URL } from "../../api/client";
@@ -10,6 +10,10 @@ import {
   Cpu,
   Code,
   Loader2,
+  Search,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 
@@ -41,11 +45,30 @@ const botStatusMap: Record<string, string> = {
 
 export function AllBotsPage() {
   const [statusFilter, setStatusFilter] = useState<BotStatus | "all">("all");
-  const { data: response, isLoading } = useAllBots(
-    statusFilter !== "all" ? { status: statusFilter } : {},
-  );
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset page on search
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: response, isLoading } = useAllBots({
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    search: debouncedSearch || undefined,
+    offset: (page - 1) * limit,
+    limit,
+  });
+
   const responseData = response as any;
   const bots = (responseData?.data || []) as any[];
+  const total = responseData?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -89,41 +112,71 @@ export function AllBotsPage() {
       </div>
 
       <div
-        className="elite-tabs-pill-wrap"
         style={{
-          marginBottom: 32,
           display: "flex",
-          gap: 10,
-          background: "rgba(255,255,255,0.03)",
-          padding: 6,
-          borderRadius: 16,
-          width: "max-content",
-          border: "1px solid var(--border-color)",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 32,
           flexWrap: "wrap",
+          gap: 20,
         }}
       >
-        {["all", "PENDING", "APPROVED", "ACTIVE", "PAUSED", "REJECTED"].map(
-          (s) => (
-            <button
-              key={s}
-              className={`elite-tab-pill ${statusFilter === s ? "active" : ""}`}
-              onClick={() => setStatusFilter(s as any)}
-              style={{
-                padding: "10px 22px",
-                borderRadius: 12,
-                border: "none",
-                background: statusFilter === s ? "var(--blue)" : "transparent",
-                color: statusFilter === s ? "white" : "var(--text-muted)",
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: "pointer",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              {botStatusMap[s] || s}
+        <div
+          className="elite-tabs-pill-wrap"
+          style={{
+            display: "flex",
+            gap: 10,
+            background: "rgba(255,255,255,0.03)",
+            padding: 6,
+            borderRadius: 16,
+            width: "max-content",
+            border: "1px solid var(--border-color)",
+            flexWrap: "wrap",
+          }}
+        >
+          {["all", "PENDING", "APPROVED", "ACTIVE", "PAUSED", "REJECTED"].map(
+            (s) => (
+              <button
+                key={s}
+                className={`elite-tab-pill ${statusFilter === s ? "active" : ""}`}
+                onClick={() => {
+                  setStatusFilter(s as any);
+                  setPage(1);
+                }}
+                style={{
+                  padding: "10px 22px",
+                  borderRadius: 12,
+                  border: "none",
+                  background:
+                    statusFilter === s ? "var(--blue)" : "transparent",
+                  color: statusFilter === s ? "white" : "var(--text-muted)",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+              >
+                {botStatusMap[s] || s}
+              </button>
+            ),
+          )}
+        </div>
+
+        <div className="search-container" style={{ width: 350, margin: 0 }}>
+          <Search className="search-icon" size={18} />
+          <input
+            className="form-input search-input"
+            placeholder="Bot nomi, username yoki ID orqali qidirish..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ paddingLeft: 44 }}
+          />
+          {search && (
+            <button className="search-clear" onClick={() => setSearch("")}>
+              <X size={16} />
             </button>
-          ),
-        )}
+          )}
+        </div>
       </div>
 
       <div className="elite-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -402,6 +455,72 @@ export function AllBotsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div
+            style={{
+              padding: "20px 32px",
+              borderTop: "1px solid rgba(255,255,255,0.03)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "rgba(255,255,255,0.01)",
+            }}
+          >
+            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+              Jami{" "}
+              <span style={{ color: "white", fontWeight: 600 }}>{total}</span>{" "}
+              tadan{" "}
+              <span style={{ color: "white", fontWeight: 600 }}>
+                {(page - 1) * limit + 1}-{Math.min(page * limit, total)}
+              </span>{" "}
+              ko'rsatilmoqda
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="pagination-btn"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {[...Array(totalPages)].map((_, i) => {
+                const p = i + 1;
+                // Faqat boshidagi, oxiridagi va joriy sahifa atrofidagilarni ko'rsatamiz
+                if (
+                  p === 1 ||
+                  p === totalPages ||
+                  (p >= page - 1 && p <= page + 1)
+                ) {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`pagination-btn ${page === p ? "active" : ""}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                } else if (p === page - 2 || p === page + 2) {
+                  return (
+                    <span key={p} style={{ color: "rgba(255,255,255,0.2)" }}>
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="pagination-btn"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -460,6 +579,77 @@ export function AllBotsPage() {
 
                 .elite-integration-toggle:active {
                     transform: scale(0.95);
+                }
+
+                .pagination-btn {
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 10px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    background: rgba(255,255,255,0.02);
+                    color: var(--text-muted);
+                    font-weight: 600;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .pagination-btn:hover:not(:disabled) {
+                    background: rgba(255,255,255,0.1);
+                    color: white;
+                    border-color: rgba(255,255,255,0.2);
+                }
+                .pagination-btn.active {
+                    background: var(--blue);
+                    color: white;
+                    border-color: var(--blue);
+                }
+                .pagination-btn:disabled {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                }
+
+                .search-container {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+                .search-icon {
+                    position: absolute;
+                    left: 14px;
+                    color: var(--text-muted);
+                }
+                .search-input {
+                    width: 100%;
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid var(--border-color);
+                    border-radius: 12px;
+                    padding: 10px 14px 10px 40px;
+                    color: white;
+                    font-size: 14px;
+                    transition: all 0.2s;
+                }
+                .search-input:focus {
+                    outline: none;
+                    background: rgba(255,255,255,0.05);
+                    border-color: var(--blue);
+                    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+                }
+                .search-clear {
+                    position: absolute;
+                    right: 12px;
+                    background: none;
+                    border: none;
+                    color: var(--text-muted);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .search-clear:hover {
+                    color: white;
                 }
 
                 @keyframes spin {
