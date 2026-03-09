@@ -125,6 +125,12 @@ export const adminService = {
       integrationMode,
     });
   },
+  async pauseBot(botId: string): Promise<void> {
+    await apiClient.post(`/admin/moderation/bots/${botId}/pause`);
+  },
+  async resumeBot(botId: string): Promise<void> {
+    await apiClient.post(`/admin/moderation/bots/${botId}/resume`);
+  },
 
   // --- Withdrawals ---
   async getPendingWithdrawals(

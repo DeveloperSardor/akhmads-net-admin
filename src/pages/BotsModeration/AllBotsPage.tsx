@@ -14,6 +14,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Play,
+  Pause,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 
@@ -83,6 +85,26 @@ export function AllBotsPage() {
     setProcessingId(botId);
     try {
       await adminService.updateBotIntegrationMode(botId, newMode);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Xatolik yuz berdi");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const toggleBotPause = async (botId: string, currentIsPaused: boolean) => {
+    const action = currentIsPaused ? "faollashtirishni" : "to'xtatib turishni";
+    if (!window.confirm(`Botni ${action} tasdiqlaysizmi?`)) return;
+
+    setProcessingId(botId);
+    try {
+      if (currentIsPaused) {
+        await adminService.resumeBot(botId);
+      } else {
+        await adminService.pauseBot(botId);
+      }
       window.location.reload();
     } catch (err) {
       console.error(err);
@@ -192,6 +214,7 @@ export function AllBotsPage() {
                 <th>REJIM</th>
                 <th>STATISTIKA</th>
                 <th>DAROMAD</th>
+                <th>AMAL</th>
                 <th style={{ textAlign: "right", paddingRight: 32 }}>SANA</th>
               </tr>
             </thead>
@@ -427,6 +450,33 @@ export function AllBotsPage() {
                       </span>
                     </div>
                   </td>
+                  <td>
+                    <button
+                      disabled={processingId === bot.id}
+                      onClick={() => toggleBotPause(bot.id, bot.isPaused)}
+                      className={`elite-pause-toggle ${bot.isPaused ? "is-paused" : "is-active"}`}
+                      title={bot.isPaused ? "Yoqish" : "To'xtatib turish"}
+                      style={{
+                        cursor:
+                          processingId === bot.id ? "not-allowed" : "pointer",
+                        opacity: processingId === bot.id ? 0.7 : 1,
+                      }}
+                    >
+                      {processingId === bot.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : bot.isPaused ? (
+                        <>
+                          <Play size={12} />
+                          <span>YOQISH</span>
+                        </>
+                      ) : (
+                        <>
+                          <Pause size={12} />
+                          <span>STOP</span>
+                        </>
+                      )}
+                    </button>
+                  </td>
                   <td style={{ textAlign: "right", paddingRight: 32 }}>
                     <div
                       style={{
@@ -580,6 +630,40 @@ export function AllBotsPage() {
 
                 .elite-integration-toggle:active {
                     transform: scale(0.95);
+                }
+
+                .elite-pause-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 14px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.05em;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1px solid transparent;
+                    text-transform: uppercase;
+                }
+
+                .elite-pause-toggle.is-active {
+                    background: rgba(239, 68, 68, 0.1);
+                    color: #ef4444;
+                    border-color: rgba(239, 68, 68, 0.2);
+                }
+                .elite-pause-toggle.is-active:hover {
+                    background: rgba(239, 68, 68, 0.2);
+                    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+                }
+
+                .elite-pause-toggle.is-paused {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: #10b981;
+                    border-color: rgba(16, 185, 129, 0.2);
+                }
+                .elite-pause-toggle.is-paused:hover {
+                    background: rgba(16, 185, 129, 0.2);
+                    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
                 }
 
                 .pagination-btn {
