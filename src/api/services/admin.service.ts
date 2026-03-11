@@ -181,12 +181,15 @@ export const adminService = {
   async unbanUser(id: string): Promise<void> {
     await apiClient.post(`/admin/users/${id}/unban`);
   },
-  async topUpUserWallet(
+  async adjustUserBalance(
     id: string,
     amount: number,
     reason: string,
   ): Promise<void> {
-    await apiClient.post(`/admin/users/${id}/topup`, { amount, reason });
+    await apiClient.post(`/admin/users/${id}/adjust-balance`, {
+      amount,
+      reason,
+    });
   },
 
   // --- Pricing Management ---
