@@ -16,8 +16,11 @@ import {
   ChevronRight,
   Play,
   Pause,
+  Pencil,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
+import { botsService } from "../../api/services/bots.service";
+import { apiClient } from "../../api/client";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("uz-UZ", {
@@ -74,6 +77,39 @@ export function AllBotsPage() {
     responseData?.pagination?.totalPages ?? Math.ceil(total / limit);
 
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [editingBot, setEditingBot] = useState<any>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCats, setLoadingCats] = useState(false);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      setLoadingCats(true);
+      try {
+        const res = await apiClient.get("/admin/categories");
+        setCategories(res.data.data.categories || []);
+      } catch (e) {
+        console.error("Failed to fetch categories:", e);
+      } finally {
+        setLoadingCats(false);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  const changeCategory = async (botId: string, category: string) => {
+    setProcessingId(botId);
+    try {
+      await botsService.updateBot(botId, { category });
+      alert("Kategoriya muvaffaqiyatli o'zgartirildi");
+      setEditingBot(null);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Xatolik yuz berdi");
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   const toggleIntegrationMode = async (botId: string, currentMode: string) => {
     const newMode = (currentMode === "MANUAL" ? "AUTO" : "MANUAL") as
@@ -362,7 +398,8 @@ export function AllBotsPage() {
                     </span>
                   </td>
                   <td>
-                    <span
+                    <button
+                      onClick={() => setEditingBot(bot)}
                       className="tag"
                       style={{
                         border: "1px solid rgba(168, 85, 247, 0.2)",
@@ -370,10 +407,15 @@ export function AllBotsPage() {
                         background: "rgba(168, 85, 247, 0.05)",
                         fontSize: 11,
                         fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
                       }}
                     >
                       #{bot.category}
-                    </span>
+                      <Pencil size={10} />
+                    </button>
                   </td>
                   <td>
                     <button
@@ -573,6 +615,197 @@ export function AllBotsPage() {
           </div>
         )}
       </div>
+
+      {editingBot && (
+        <div className="modal-overlay" onClick={() => setEditingBot(null)}>
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 500 }}
+          >
+            <div
+              className="modal-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 24,
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "white",
+                  margin: 0,
+                }}
+              >
+                Kategoriyani O'zgartirish
+              </h2>
+              <button
+                onClick={() => setEditingBot(null)}
+                className="search-clear"
+                style={{ position: "relative", right: 0 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                padding: 16,
+                borderRadius: 16,
+                border: "1px solid var(--border-color)",
+                marginBottom: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "var(--blue)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  color: "white",
+                  fontSize: 18,
+                }}
+              >
+                {editingBot.username?.[0].toUpperCase() || "B"}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: "white" }}>
+                  {editingBot.firstName}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--blue)" }}>
+                  @{editingBot.username}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginBottom: 12,
+                fontSize: 13,
+                color: "var(--text-muted)",
+                fontWeight: 600,
+              }}
+            >
+              YANGI KATEGORIYANI TANLANG:
+            </div>
+
+            <div
+              className="cats-grid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+                maxHeight: 300,
+                overflowY: "auto",
+                paddingRight: 4,
+              }}
+            >
+              {loadingCats ? (
+                <div
+                  style={{
+                    gridColumn: "span 2",
+                    textAlign: "center",
+                    padding: 20,
+                  }}
+                >
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : categories.length > 0 ? (
+                categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => changeCategory(editingBot.id, cat.slug)}
+                    disabled={processingId === editingBot.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "12px 16px",
+                      borderRadius: 12,
+                      border:
+                        editingBot.category === cat.slug
+                          ? "1px solid var(--blue)"
+                          : "1px solid var(--border-color)",
+                      background:
+                        editingBot.category === cat.slug
+                          ? "rgba(59, 130, 246, 0.1)"
+                          : "rgba(255,255,255,0.02)",
+                      color:
+                        editingBot.category === cat.slug
+                          ? "var(--blue)"
+                          : "white",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      textAlign: "left",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(255,255,255,0.05)";
+                      e.currentTarget.style.borderColor = "var(--blue)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        editingBot.category === cat.slug
+                          ? "rgba(59, 130, 246, 0.1)"
+                          : "rgba(255,255,255,0.02)";
+                      e.currentTarget.style.borderColor =
+                        editingBot.category === cat.slug
+                          ? "var(--blue)"
+                          : "var(--border-color)";
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{cat.icon || "📌"}</span>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>
+                        {cat.nameUz}
+                      </span>
+                      <span style={{ fontSize: 10, opacity: 0.6 }}>
+                        #{cat.slug}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div
+                  style={{
+                    gridColumn: "span 2",
+                    textAlign: "center",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Kategoriyalar topilmadi
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                marginTop: 24,
+                padding: 16,
+                borderRadius: 12,
+                background: "rgba(255,191,0,0.05)",
+                border: "1px solid rgba(255,191,0,0.2)",
+                fontSize: 12,
+                color: "rgba(255,191,0,0.8)",
+              }}
+            >
+              <strong>Eslatma:</strong> Kategoriya o'zgarishi botga mos
+              keladigan reklamalar oqimiga bevosita ta'sir qiladi.
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
                 .elite-table thead th {
