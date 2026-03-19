@@ -227,11 +227,54 @@ export function Sidebar({
   return (
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="sidebar-logo">
-        <div className="logo-icon">A</div>
-        <div className="logo-text-wrap">
-          <div className="logo-text">AKHMADS.NET</div>
-          <div className="logo-sub">admin panel v2.0</div>
-        </div>
+        <Link
+          to="/"
+          className="sidebar-logo-link"
+          onClick={() => window.innerWidth <= 1024 && onClose?.()}
+        >
+          <div className="client-logo-wrap">
+            <div className="client-logo-inner">
+              <div className="spinning-ring outer"></div>
+              <div className="spinning-ring inner"></div>
+              <svg className="logo-svg-x" viewBox="0 0 20 20" fill="none">
+                <line
+                  x1="4"
+                  y1="4"
+                  x2="16"
+                  y2="16"
+                  stroke="url(#xg_sidebar)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="16"
+                  y1="4"
+                  x2="4"
+                  y2="16"
+                  stroke="url(#xg_sidebar)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient
+                    id="xg_sidebar"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor="#6a00ff" />
+                    <stop offset="100%" stopColor="#b84dff" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div className="logo-text-stack">
+              <span className="logo-title">AKHMADS.NET</span>
+              <span className="logo-subtitle">ADMIN PANEL V2.0</span>
+            </div>
+          </div>
+        </Link>
         <button className="sidebar-close-btn" onClick={onClose}>
           <X size={20} />
         </button>
@@ -291,41 +334,128 @@ export function Sidebar({
       </div>
 
       <style>{`
+        .sidebar {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1001; /* Ensure stay above overlay */
+        }
+
         .sidebar-logo {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
             justify-content: space-between;
         }
-        .logo-text-wrap {
+
+        .sidebar-logo-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             flex: 1;
             min-width: 0;
-            margin-left: 12px;
         }
+
+        .client-logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .client-logo-inner {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: radial-gradient(circle at center, #0f0f2a 40%, #070715 100%);
+            box-shadow: 0 0 14px rgba(120,0,255,0.2), inset 0 0 10px rgba(100,0,255,0.2);
+        }
+
+        .spinning-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        .spinning-ring.outer {
+            border-top-color: #8f2fff;
+            border-bottom-color: #4b00ff;
+            animation: spin 6s linear infinite;
+        }
+
+        .spinning-ring.inner {
+            inset: 4px;
+            border-top-color: #4b00ff;
+            border-bottom-color: #8f2fff;
+            animation: spin 6s linear infinite reverse;
+        }
+
+        .logo-svg-x {
+            width: 16px;
+            height: 16px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo-text-stack {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.1px;
+            color: var(--text-main);
+        }
+
+        .logo-subtitle {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .sidebar-close-btn {
             display: none;
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
         }
+
         .sidebar-close-btn:hover {
             background: var(--surface2);
             color: #fff;
+            transform: translateY(-1px);
         }
 
         @media (max-width: 1024px) {
             .sidebar-close-btn {
-                display: block;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         }
         
         @media (max-width: 480px) {
-            .nav-label-text {
-                font-size: 13px;
-            }
-            .sidebar-logo {
-                padding: 16px 12px;
-            }
+            .logo-title { font-size: 14px; }
+            .logo-subtitle { font-size: 8px; }
+            .client-logo-inner { width: 32px; height: 32px; }
         }
       `}</style>
     </nav>

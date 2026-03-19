@@ -160,10 +160,66 @@ export function LoginPage() {
       <div className="login-blur-blob blob-2"></div>
 
       <div className="login-card" style={{ maxWidth: 440, width: "100%" }}>
-        <div className="login-logo-wrap">
-          <div className="login-logo-icon">A</div>
-          <div className="login-logo-text">AKHMADS.NET</div>
-          <div className="login-logo-sub">admin panel v2.0</div>
+        <div className="login-logo-section">
+          <div className="client-logo-inner" style={{ width: 44, height: 44 }}>
+            <div className="spinning-ring outer"></div>
+            <div className="spinning-ring inner"></div>
+            <svg
+              className="logo-svg-x"
+              viewBox="0 0 20 20"
+              fill="none"
+              style={{ width: 20, height: 20 }}
+            >
+              <line
+                x1="4"
+                y1="4"
+                x2="16"
+                y2="16"
+                stroke="url(#xg_login)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="16"
+                y1="4"
+                x2="4"
+                y2="16"
+                stroke="url(#xg_login)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <defs>
+                <linearGradient
+                  id="xg_login"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#6a00ff" />
+                  <stop offset="100%" stopColor="#b84dff" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="logo-text-stack">
+            <span
+              className="login-logo-text"
+              style={{ fontSize: 22, fontWeight: 800 }}
+            >
+              AKHMADS.NET
+            </span>
+            <span
+              className="login-logo-sub"
+              style={{
+                fontSize: 10,
+                color: "var(--accent-primary)",
+                letterSpacing: 1,
+              }}
+            >
+              ADMIN PANEL V2.0
+            </span>
+          </div>
         </div>
 
         <div className="login-content">
