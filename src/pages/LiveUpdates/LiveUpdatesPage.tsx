@@ -13,8 +13,6 @@ import {
   Info,
   Radio,
   Search,
-  Filter,
-  ChevronRight,
   Clock,
   Globe,
   DollarSign,
@@ -24,6 +22,7 @@ import {
   BarChart3,
   Signal,
   ArrowUpRight,
+  LayoutGrid,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 import type { BotResponse } from "../../api/services/bots.service";
