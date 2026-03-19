@@ -91,10 +91,21 @@ export function LiveUpdatesPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [botFilter, setBotFilter] = useState<string>("all");
+  const [selectedLangs, setSelectedLangs] = useState<string[]>([
+    "uz",
+    "ru",
+    "en",
+  ]);
   const [searchQuery, setSearchQuery] = useState("");
   const [allBots, setAllBots] = useState<BotResponse[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
+
+  const LANGS = [
+    { id: "uz", label: "Uzbek", flag: "🇺🇿" },
+    { id: "ru", label: "Russian", flag: "🇷🇺" },
+    { id: "en", label: "English", flag: "🇺🇸" },
+  ];
 
   useEffect(() => {
     const fetchBots = async () => {
@@ -136,19 +147,35 @@ export function LiveUpdatesPage() {
     };
   }, []);
 
+  const toggleLang = (langId: string) => {
+    setSelectedLangs((prev) =>
+      prev.includes(langId)
+        ? prev.filter((id) => id !== langId)
+        : [...prev, langId],
+    );
+  };
+
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const matchesType = typeFilter === "all" || log.type === typeFilter;
       const matchesBot =
         botFilter === "all" || log.data?.botUsername === botFilter;
+
+      // Til bo'yicha filtrlash
+      const logLang = log.data?.lang?.toLowerCase();
+      const matchesLang =
+        !logLang ||
+        selectedLangs.length === 0 ||
+        selectedLangs.includes(logLang);
+
       const matchesSearch =
         !searchQuery ||
         log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.data?.username?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return matchesType && matchesBot && matchesSearch;
+      return matchesType && matchesBot && matchesLang && matchesSearch;
     });
-  }, [logs, typeFilter, botFilter, searchQuery]);
+  }, [logs, typeFilter, botFilter, selectedLangs, searchQuery]);
 
   return (
     <div className="live-updates-container">
@@ -189,32 +216,61 @@ export function LiveUpdatesPage() {
       </div>
 
       {/* Control Filters Area */}
-      <div className="filters-bar">
-        <div className="type-filters">
-          {["all", "bot", "broadcast", "ad", "system", "error"].map((f) => (
-            <button
-              key={f}
-              className={`filter-tab ${typeFilter === f ? "active" : ""}`}
-              onClick={() => setTypeFilter(f)}
-            >
-              {f === "all" ? "BARCHASI" : f.toUpperCase()}
-            </button>
-          ))}
+      <div className="filters-section">
+        <div className="filter-group">
+          <div className="filter-label">Tilni tanlang</div>
+          <div className="lang-chips">
+            {LANGS.map((lang) => (
+              <button
+                key={lang.id}
+                className={`lang-chip ${
+                  selectedLangs.includes(lang.id) ? "active" : ""
+                }`}
+                onClick={() => toggleLang(lang.id)}
+              >
+                <span className="lang-flag">{lang.flag}</span>
+                <span className="lang-name">{lang.label}</span>
+                {selectedLangs.includes(lang.id) && (
+                  <span className="lang-close">×</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="bot-selector-wrap">
-          <Bot size={14} />
-          <select
-            value={botFilter}
-            onChange={(e) => setBotFilter(e.target.value)}
-          >
-            <option value="all">Barcha Botlar</option>
-            {allBots.map((b) => (
-              <option key={b.id} value={b.username}>
-                @{b.username}
-              </option>
-            ))}
-          </select>
+        <div className="filters-bar">
+          <div className="filter-group">
+            <div className="filter-label">Kategoriya tanlash</div>
+            <div className="type-filters">
+              {["all", "bot", "broadcast", "ad", "system", "error"].map((f) => (
+                <button
+                  key={f}
+                  className={`filter-tab ${typeFilter === f ? "active" : ""}`}
+                  onClick={() => setTypeFilter(f)}
+                >
+                  {f === "all" ? "BARCHASI" : f.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <div className="filter-label">Botni tanlash</div>
+            <div className="bot-selector-wrap">
+              <Bot size={14} />
+              <select
+                value={botFilter}
+                onChange={(e) => setBotFilter(e.target.value)}
+              >
+                <option value="all">Barcha Botlar</option>
+                {allBots.map((b) => (
+                  <option key={b.id} value={b.username}>
+                    @{b.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -413,12 +469,82 @@ export function LiveUpdatesPage() {
            background: rgba(244,63,94,0.2);
         }
 
+        /* Filters Section */
+        .filters-section {
+           margin-bottom: 24px;
+           background: rgba(255,255,255,0.01);
+           border-radius: 20px;
+           border: 1px solid rgba(255,255,255,0.05);
+           padding: 20px;
+        }
+
+        .filter-group {
+           margin-bottom: 20px;
+        }
+
+        .filter-group:last-child {
+           margin-bottom: 0;
+        }
+
+        .filter-label {
+           font-size: 11px;
+           font-weight: 800;
+           color: #64748b;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+           margin-bottom: 12px;
+           display: flex;
+           align-items: center;
+           gap: 8px;
+        }
+
+        .lang-chips {
+           display: flex;
+           gap: 8px;
+           flex-wrap: wrap;
+        }
+
+        .lang-chip {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           background: #fff;
+           border: 1px solid #e2e8f0;
+           padding: 6px 14px;
+           border-radius: 10px;
+           cursor: pointer;
+           transition: 0.2s;
+           color: #334155;
+           font-size: 13px;
+           font-weight: 600;
+        }
+
+        .lang-chip.active {
+           background: #f8fafc;
+           border-color: #8b5cf6;
+           color: #8b5cf6;
+           box-shadow: 0 2px 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .lang-flag {
+           font-size: 14px;
+        }
+
+        .lang-close {
+           font-size: 16px;
+           font-weight: 400;
+           margin-left: 4px;
+           opacity: 0.5;
+        }
+
         /* Filters Bar */
         .filters-bar {
-           display: flex;
-           justify-content: space-between;
-           align-items: center;
-           margin-bottom: 20px;
+           display: grid;
+           grid-template-columns: 1fr auto;
+           gap: 24px;
+           align-items: flex-end;
+           padding-top: 20px;
+           border-top: 1px solid rgba(255,255,255,0.03);
         }
 
         .type-filters {
