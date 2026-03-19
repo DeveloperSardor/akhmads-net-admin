@@ -16,6 +16,7 @@ import {
   DollarSign,
   User,
   History,
+  ChevronRight,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 import type { BotResponse } from "../../api/services/bots.service";
@@ -35,35 +36,55 @@ interface LogEntry {
   data?: any;
 }
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG: Record<string, any> = {
   success: {
-    label: "Success",
+    label: "Muvaffaqiyat",
     color: "#10b981",
-    bg: "#064e3b",
+    bg: "rgba(16,185,129,0.1)",
     icon: CheckCircle2,
   },
-  error: { label: "Critical", color: "#f43f5e", bg: "#4c0519", icon: XCircle },
+  error: {
+    label: "Xatolik",
+    color: "#f43f5e",
+    bg: "rgba(244,63,94,0.1)",
+    icon: XCircle,
+  },
   warning: {
-    label: "Warning",
+    label: "Ogohlantirish",
     color: "#f59e0b",
-    bg: "#451a03",
+    bg: "rgba(245,158,11,0.1)",
     icon: AlertTriangle,
   },
-  system: { label: "System", color: "#8b5cf6", bg: "#2e1065", icon: Zap },
+  system: {
+    label: "Tizim",
+    color: "#8b5cf6",
+    bg: "rgba(139,92,246,0.1)",
+    icon: Zap,
+  },
   broadcast: {
     label: "Broadcast",
     color: "#6366f1",
-    bg: "#1e1b4b",
+    bg: "rgba(99,102,241,0.1)",
     icon: Send,
   },
   ad: {
-    label: "Advertising",
+    label: "Reklama",
     color: "#3b82f6",
-    bg: "#172554",
+    bg: "rgba(59,130,246,0.1)",
     icon: Megaphone,
   },
-  bot: { label: "Bot Activity", color: "#14b8a6", bg: "#042f2e", icon: Bot },
-  info: { label: "Info", color: "#0ea5e9", bg: "#082f49", icon: Info },
+  bot: {
+    label: "Bot-Aktiv",
+    color: "#14b8a6",
+    bg: "rgba(20,184,166,0.1)",
+    icon: Bot,
+  },
+  info: {
+    label: "Ma'lumot",
+    color: "#0ea5e9",
+    bg: "rgba(14,165,233,0.1)",
+    icon: Info,
+  },
 };
 
 export function LiveUpdatesPage() {
@@ -107,7 +128,7 @@ export function LiveUpdatesPage() {
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("terminal:log", (log: LogEntry) => {
-      setLogs((prev) => [log, ...prev].slice(0, 300));
+      setLogs((prev) => [log, ...prev].slice(0, 200));
     });
 
     socketRef.current = socket;
@@ -131,235 +152,440 @@ export function LiveUpdatesPage() {
   }, [logs, typeFilter, botFilter, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-400 font-sans p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header - Simple & Clean */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-900">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-zinc-100 flex items-center gap-2">
-              Live Console{" "}
-              <span className="text-xs font-medium text-zinc-600 px-2 py-0.5 rounded border border-zinc-800">
-                BETA v2
-              </span>
-            </h1>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-rose-500 animate-pulse"}`}
-                ></div>
-                <span
-                  className={
-                    isConnected
-                      ? "text-emerald-500/80 font-medium"
-                      : "text-rose-500/80"
-                  }
-                >
-                  {isConnected ? "Operational" : "Disconnected"}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-4">
-                <History className="w-3.5 h-3.5 text-zinc-600" />
-                <span>Tracking {logs.length} events</span>
-              </div>
-            </div>
+    <div className="live-updates-container">
+      {/* Header Panel */}
+      <div className="live-header">
+        <div className="header-info text-2xl font-semibold">
+          <div className="title-row">
+            <Zap className="title-icon" />
+            <h1>Live Activity Stream</h1>
           </div>
+          <div className="status-row">
+            <span
+              className={`status-badge ${isConnected ? "online" : "offline"}`}
+            >
+              <div className="status-dot"></div>
+              {isConnected ? "SISTEMA BILAN ULANILGAN" : "ULANISH UZILDI"}
+            </span>
+            <span className="stats-indicator">
+              <History size={14} /> monitoring {logs.length} events
+            </span>
+          </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="bg-transparent border border-zinc-800 hover:border-zinc-700 focus:border-indigo-500/50 rounded-lg py-2 pl-9 pr-4 text-xs text-zinc-200 outline-none w-full md:w-64 transition-all"
-              />
-            </div>
+        <div className="header-actions">
+          <div className="search-box">
+            <Search className="search-icon" size={16} />
+            <input
+              type="text"
+              placeholder="Xabar qidirish..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button className="clear-btn" onClick={() => setLogs([])}>
+            <Trash2 size={16} /> Tozalash
+          </button>
+        </div>
+      </div>
+
+      {/* Control Filters Area */}
+      <div className="filters-bar">
+        <div className="type-filters">
+          {["all", "bot", "broadcast", "ad", "system", "error"].map((f) => (
             <button
-              onClick={() => setLogs([])}
-              className="flex items-center gap-2 px-4 py-2 border border-zinc-800 hover:bg-zinc-900 rounded-lg text-xs font-medium transition-all"
+              key={f}
+              className={`filter-tab ${typeFilter === f ? "active" : ""}`}
+              onClick={() => setTypeFilter(f)}
             >
-              <Trash2 className="w-4 h-4" />
-              Clear
+              {f === "all" ? "BARCHASI" : f.toUpperCase()}
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* Filters bar */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2">
-            {["all", "bot", "broadcast", "ad", "system", "error"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setTypeFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  typeFilter === f
-                    ? "bg-indigo-600 border-indigo-500 text-white"
-                    : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700"
-                }`}
-              >
-                {f === "all"
-                  ? "All Events"
-                  : f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
+        <div className="bot-selector-wrap">
+          <Bot size={14} />
+          <select
+            value={botFilter}
+            onChange={(e) => setBotFilter(e.target.value)}
+          >
+            <option value="all">Barcha Botlar</option>
+            {allBots.map((b) => (
+              <option key={b.id} value={b.username}>
+                @{b.username}
+              </option>
             ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-600">Bot:</span>
-            <select
-              value={botFilter}
-              onChange={(e) => setBotFilter(e.target.value)}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-300 outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
-            >
-              <option value="all">Global (All Bots)</option>
-              {allBots.map((b) => (
-                <option key={b.id} value={b.username}>
-                  @{b.username}
-                </option>
-              ))}
-            </select>
-          </div>
+          </select>
         </div>
+      </div>
 
-        {/* Main Console Table */}
-        <div className="bg-[#0c0c0e] border border-zinc-900 rounded-xl overflow-hidden shadow-2xl">
-          <div className="grid grid-cols-[100px_140px_180px_1fr_150px] gap-4 px-6 py-4 bg-zinc-900/30 border-b border-zinc-900 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-            <div>Time</div>
-            <div>Type</div>
-            <div>Source Bot</div>
-            <div>Activity Overview</div>
-            <div className="text-right">Origin</div>
-          </div>
+      {/* Main Stream Display */}
+      <div className="activity-stream">
+        {filteredLogs.length > 0 ? (
+          filteredLogs.map((log, i) => (
+            <div key={i} className={`activity-row type-${log.type}`}>
+              <div className="row-time">
+                {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
+                  hour12: false,
+                })}
+              </div>
 
-          <div className="max-h-[700px] overflow-y-auto divide-y divide-zinc-900 custom-scrollbar pb-10">
-            {filteredLogs.length > 0 ? (
-              filteredLogs.map((log, i) => <ConsoleRow key={i} log={log} />)
-            ) : (
-              <EmptyState />
-            )}
+              <div className="row-type">
+                <div
+                  className="type-pill"
+                  style={{
+                    color: TYPE_CONFIG[log.type]?.color,
+                    backgroundColor: TYPE_CONFIG[log.type]?.bg,
+                  }}
+                >
+                  {TYPE_CONFIG[log.type]?.label || log.type}
+                </div>
+              </div>
+
+              <div className="row-bot">
+                {log.data?.botUsername ? (
+                  <a
+                    href={`https://t.me/${log.data.botUsername}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bot-link"
+                  >
+                    <Bot size={13} /> @{log.data.botUsername}
+                  </a>
+                ) : (
+                  <span className="system-label">System</span>
+                )}
+              </div>
+
+              <div className="row-message">
+                <div className="message-text">{log.message}</div>
+                <div className="message-meta">
+                  {log.data?.username && (
+                    <span>
+                      <User size={11} /> {log.data.username}
+                    </span>
+                  )}
+                  {log.data?.amount && (
+                    <span className="amount-val">
+                      <DollarSign size={11} /> {log.data.amount}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="row-action">
+                <ChevronRight />
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="empty-stream">
+            <Activity className="pulse-icon" />
+            <p>
+              {isConnected ? "Yangi xabarlar kutilmoqda..." : "Ulanilmoqda..."}
+            </p>
           </div>
-        </div>
+        )}
       </div>
 
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
+        .live-updates-container {
+           padding: 24px;
+           color: #e2e8f0;
+           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+           background: transparent;
+        }
+
+        .live-header {
+           display: flex;
+           justify-content: space-between;
+           align-items: flex-end;
+           margin-bottom: 24px;
+           border-bottom: 1px solid rgba(255,255,255,0.05);
+           padding-bottom: 24px;
+        }
+
+        .title-row {
+           display: flex;
+           align-items: center;
+           gap: 12px;
+           margin-bottom: 8px;
+        }
+
+        .title-icon {
+           color: #8b5cf6;
+        }
+
+        .live-header h1 {
+           margin: 0;
+           font-size: 28px;
+           font-weight: 800;
+           letter-spacing: -0.5px;
+           color: #fff;
+        }
+
+        .status-row {
+           display: flex;
+           align-items: center;
+           gap: 16px;
+        }
+
+        .status-badge {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           font-size: 10px;
+           font-weight: 800;
+           letter-spacing: 1px;
+           padding: 4px 12px;
+           border-radius: 100px;
+           background: rgba(255,255,255,0.03);
+        }
+
+        .status-badge.online { color: #10b981; }
+        .status-badge.offline { color: #f43f5e; }
+
+        .status-dot {
+           width: 6px;
+           height: 6px;
+           border-radius: 50%;
+           background: currentColor;
+           box-shadow: 0 0 8px currentColor;
+        }
+        
+        .stats-indicator {
+           font-size: 11px;
+           color: #64748b;
+           display: flex;
+           align-items: center;
+           gap: 6px;
+        }
+
+        .header-actions {
+           display: flex;
+           gap: 12px;
+        }
+
+        .search-box {
+           position: relative;
+           width: 280px;
+        }
+
+        .search-icon {
+           position: absolute;
+           left: 12px;
+           top: 11px;
+           color: #64748b;
+        }
+
+        .search-box input {
+           width: 100%;
+           background: rgba(255,255,255,0.03);
+           border: 1px solid rgba(255,255,255,0.1);
+           border-radius: 12px;
+           padding: 10px 12px 10px 38px;
+           color: #fff;
+           font-size: 13px;
+           outline: none;
+           transition: 0.2s;
+        }
+
+        .search-box input:focus {
+           border-color: #8b5cf6;
+           background: rgba(255,255,255,0.06);
+        }
+
+        .clear-btn {
+           background: rgba(244,63,94,0.1);
+           border: 1px solid rgba(244,63,94,0.2);
+           color: #f43f5e;
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           padding: 0 16px;
+           border-radius: 12px;
+           font-size: 12px;
+           font-weight: 600;
+           cursor: pointer;
+           transition: 0.2s;
+        }
+
+        .clear-btn:hover {
+           background: rgba(244,63,94,0.2);
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           margin-bottom: 20px;
+        }
+
+        .type-filters {
+           display: flex;
+           gap: 6px;
+        }
+
+        .filter-tab {
+           background: transparent;
+           border: 1px solid transparent;
+           color: #64748b;
+           padding: 6px 14px;
+           border-radius: 10px;
+           font-size: 11px;
+           font-weight: 700;
+           cursor: pointer;
+           transition: 0.2s;
+        }
+
+        .filter-tab:hover {
+           color: #cbd5e1;
+           background: rgba(255,255,255,0.03);
+        }
+
+        .filter-tab.active {
+           background: #8b5cf6;
+           color: #fff;
+           border-color: #8b5cf6;
+        }
+
+        .bot-selector-wrap {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+           background: rgba(255,255,255,0.03);
+           border: 1px solid rgba(255,255,255,0.1);
+           padding: 4px 12px;
+           border-radius: 10px;
+        }
+
+        .bot-selector-wrap select {
+           background: transparent;
+           border: none;
+           color: #cbd5e1;
+           font-size: 12px;
+           font-weight: 600;
+           outline: none;
+           cursor: pointer;
+        }
+
+        /* Activity Stream Table */
+        .activity-stream {
+           border: 1px solid rgba(255,255,255,0.05);
+           border-radius: 20px;
+           background: rgba(255,255,255,0.01);
+           overflow: hidden;
+        }
+
+        .activity-row {
+           display: grid;
+           grid-template-columns: 80px 140px 160px 1fr 40px;
+           gap: 16px;
+           padding: 16px 24px;
+           align-items: center;
+           border-bottom: 1px solid rgba(255,255,255,0.03);
+           transition: 0.2s;
+           animation: slideIn 0.3s ease-out;
+        }
+
+        .activity-row:hover {
+           background: rgba(255,255,255,0.02);
+        }
+
+        @keyframes slideIn {
+           from { opacity: 0; transform: translateY(-10px); }
+           to { opacity: 1; transform: translateY(0); }
+        }
+
+        .row-time {
+           font-size: 12px;
+           color: #475569;
+           font-weight: 600;
+        }
+
+        .type-pill {
+           display: inline-block;
+           font-size: 10px;
+           font-weight: 800;
+           padding: 4px 10px;
+           border-radius: 8px;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+        }
+
+        .bot-link {
+           display: flex;
+           align-items: center;
+           gap: 6px;
+           color: #cbd5e1;
+           font-size: 12px;
+           font-weight: 600;
+           text-decoration: none;
+           transition: 0.2s;
+        }
+
+        .bot-link:hover {
+           color: #8b5cf6;
+        }
+
+        .system-label {
+           font-size: 11px;
+           color: #475569;
+           font-style: italic;
+        }
+
+        .message-text {
+           font-size: 14px;
+           color: #f1f5f9;
+           line-height: 1.4;
+           margin-bottom: 4px;
+        }
+
+        .message-meta {
+           display: flex;
+           gap: 12px;
+           font-size: 11px;
+           color: #64748b;
+           font-weight: 500;
+        }
+
+        .message-meta span {
+           display: flex;
+           align-items: center;
+           gap: 4px;
+        }
+
+        .amount-val {
+           color: #10b981;
+           font-weight: 700;
+        }
+
+        .row-action {
+           color: #334155;
+           display: flex;
+           justify-content: flex-end;
+        }
+
+        .empty-stream {
+           padding: 80px;
+           text-align: center;
+           color: #475569;
+        }
+
+        .pulse-icon {
+           width: 40px;
+           height: 40px;
+           margin-bottom: 16px;
+           animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+           0% { transform: scale(0.95); opacity: 0.5; }
+           50% { transform: scale(1); opacity: 0.8; }
+           100% { transform: scale(0.95); opacity: 0.5; }
+        }
       `}</style>
-    </div>
-  );
-}
-
-function ConsoleRow({ log }: { log: LogEntry }) {
-  const config =
-    TYPE_CONFIG[log.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.info;
-  const Icon = config.icon;
-  const time = new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
-    hour12: false,
-  });
-
-  return (
-    <div className="grid grid-cols-[100px_140px_180px_1fr_150px] gap-4 px-6 py-4 hover:bg-zinc-900/30 transition-all group items-center">
-      {/* Column: Time */}
-      <div className="text-[11px] font-mono font-medium text-zinc-600 group-hover:text-zinc-400 flex items-center gap-2">
-        <Clock className="w-3 h-3 opacity-40" />
-        {time}
-      </div>
-
-      {/* Column: Type Badge */}
-      <div className="flex items-center">
-        <div
-          className="flex items-center gap-2 px-2.5 py-1 rounded-full border"
-          style={{
-            borderColor: `${config.color}20`,
-            backgroundColor: `${config.color}10`,
-          }}
-        >
-          <Icon className="w-3 h-3" style={{ color: config.color }} />
-          <span
-            className="text-[10px] font-bold uppercase tracking-tight"
-            style={{ color: config.color }}
-          >
-            {config.label}
-          </span>
-        </div>
-      </div>
-
-      {/* Column: Bot Source */}
-      <div className="flex items-center gap-2 truncate">
-        {log.data?.botUsername ? (
-          <div className="flex items-center gap-2 min-w-0">
-            <Bot className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
-            <a
-              href={`https://t.me/${log.data.botUsername}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs font-semibold text-zinc-400 hover:text-indigo-400 transition-colors truncate"
-            >
-              @{log.data.botUsername}
-            </a>
-          </div>
-        ) : (
-          <span className="text-[10px] text-zinc-800 font-bold uppercase">
-            System-wide
-          </span>
-        )}
-      </div>
-
-      {/* Column: Main Message */}
-      <div className="min-w-0 flex flex-col gap-1">
-        <p className="text-[13px] text-zinc-300 font-medium leading-relaxed truncate group-hover:text-white transition-colors">
-          {log.message}
-        </p>
-        <div className="flex items-center gap-3">
-          {log.data?.username && (
-            <span className="text-[10px] text-zinc-600 flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {log.data.username}
-            </span>
-          )}
-          {log.data?.amount && (
-            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-              <DollarSign className="w-3 h-3" />${log.data.amount}
-            </span>
-          )}
-          {log.data?.lang && (
-            <span className="text-[10px] text-zinc-700 uppercase">
-              {log.data.lang}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Column: Right Action */}
-      <div className="text-right flex items-center justify-end gap-3">
-        {log.data?.action && (
-          <span className="text-[9px] font-bold text-zinc-700 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-            {log.data.action}
-          </span>
-        )}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <Info className="w-3.5 h-3.5 text-zinc-700 hover:text-zinc-500 cursor-pointer" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="p-20 flex flex-col items-center justify-center gap-4">
-      <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800">
-        <Activity className="w-6 h-6 text-zinc-700 animate-pulse" />
-      </div>
-      <div className="text-center">
-        <p className="text-sm font-semibold text-zinc-500">
-          Listening for inbound traffic
-        </p>
-        <p className="text-xs text-zinc-700">
-          Events will synchronize here as they occur.
-        </p>
-      </div>
     </div>
   );
 }
