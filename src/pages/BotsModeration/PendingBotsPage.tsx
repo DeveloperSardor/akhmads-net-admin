@@ -8,7 +8,6 @@ import {
   Globe,
   Tag,
   Calendar,
-  TrendingUp,
   Shield,
   Search,
   ChevronLeft,
@@ -120,57 +119,124 @@ export function PendingBotsPage({
         </div>
       </div>
 
-      <div className="elite-stat-grid" style={{ marginBottom: 32 }}>
-        <div className="elite-stat-box">
+      <div className="stats-grid" style={{ marginBottom: 32 }}>
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(59, 130, 246, 0.1)",
+              color: "#3b82f6",
+            }}
           >
             <Shield size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">{total}</div>
-            <div className="elite-stat-label">Kutayotgan botlar</div>
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
+              {total}
+            </div>
             <div
-              style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
             >
-              Moderatsiya navbati
+              Navbatda
             </div>
           </div>
         </div>
-        <div className="elite-stat-box">
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(168, 85, 247, 0.1)", color: "#a855f7" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(16, 185, 129, 0.1)",
+              color: "#10b981",
+            }}
           >
             <Users size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
               {avgSubscribers.toLocaleString()}
             </div>
-            <div className="elite-stat-label">O'rtacha obunachilar</div>
             <div
-              style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
             >
-              Botlar sifati ko'rsatkichi
+              O'rtacha a'zolar
             </div>
           </div>
         </div>
-        <div className="elite-stat-box">
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(168, 85, 247, 0.1)",
+              color: "#a855f7",
+            }}
           >
-            <TrendingUp size={24} />
+            <Globe size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">92%</div>
-            <div className="elite-stat-label">Tasdiqlash darajasi</div>
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
+              {
+                Array.from(new Set(bots.map((b) => b.language))).filter(Boolean)
+                  .length
+              }
+            </div>
             <div
-              style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
             >
-              Oxirgi 30 kunlik trend
+              Tillar soni
             </div>
           </div>
         </div>

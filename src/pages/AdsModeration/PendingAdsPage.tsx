@@ -111,45 +111,122 @@ export function PendingAdsPage({
         </div>
       </div>
 
-      <div className="elite-stat-grid" style={{ marginBottom: 32 }}>
-        <div className="elite-stat-box">
+      <div className="stats-grid" style={{ marginBottom: 32 }}>
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(239, 68, 68, 0.1)",
+              color: "#ef4444",
+            }}
           >
             <Shield size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">{totalCount}</div>
-            <div className="elite-stat-label">Kutayotganlar</div>
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
+              {totalCount}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
+            >
+              Navbatda
+            </div>
           </div>
         </div>
-        <div className="elite-stat-box">
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(59, 130, 246, 0.1)",
+              color: "#3b82f6",
+            }}
           >
             <Target size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
               {totalImpressions.toLocaleString()}
             </div>
-            <div className="elite-stat-label">Jami qamrov</div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
+            >
+              Jami qamrov
+            </div>
           </div>
         </div>
-        <div className="elite-stat-box">
+        <div
+          className="elite-card"
+          style={{
+            padding: 24,
+            display: "flex",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
           <div
             className="elite-stat-icon-wrap"
-            style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(16, 185, 129, 0.1)",
+              color: "#10b981",
+            }}
           >
             <DollarSign size={24} />
           </div>
-          <div style={{ marginTop: 8 }}>
-            <div className="elite-stat-value">
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#fff" }}>
               ${totalBudget.toLocaleString()}
             </div>
-            <div className="elite-stat-label">Jami byudjet</div>
+            <div
+              style={{
+                fontSize: 13,
+                color: "rgba(255,255,255,0.4)",
+                fontWeight: 500,
+              }}
+            >
+              Jami byudjet
+            </div>
           </div>
         </div>
       </div>

@@ -249,6 +249,10 @@ export const SystemTerminal: React.FC = () => {
                     bottom: 20px;
                     z-index: 9999;
                 }
+                @media (max-width: 640px) {
+                    .terminal-container { height: 300px !important; }
+                    .terminal-container span:first-child { display: none; } /* Hide time on very small mobile */
+                }
             `}</style>
     </div>
   );

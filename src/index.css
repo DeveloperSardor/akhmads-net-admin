@@ -1929,3 +1929,199 @@ tr:last-child td {
     max-width: 340px;
     line-height: 1.6;
 }
+
+/* =========================================================================
+   RESPONSIVE DESIGN SYSTEM (Ultra Detailed)
+   ========================================================================= */
+
+:root {
+    --sidebar-w: 280px;
+    --sidebar-w-collapsed: 0px;
+    --header-h: 72px;
+}
+
+/* Sidebar behavior */
+.main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    transition: margin-left var(--transition-smooth);
+}
+
+.main.expanded {
+    margin-left: var(--sidebar-w-collapsed);
+}
+
+/* Sidebar draw */
+@media (max-width: 1024px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transform: translateX(0);
+        width: 280px !important;
+    }
+    
+    .sidebar.closed {
+        transform: translateX(-100%);
+    }
+
+    .main {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    
+    .header {
+        padding: 0 16px;
+    }
+
+    .content {
+        padding: 20px 16px;
+    }
+
+    .section-title {
+        font-size: 24px;
+    }
+}
+
+/* Mobile Overrides (below 768px) */
+@media (max-width: 767px) {
+    .page-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr; /* Single column stats on mobile */
+    }
+
+    .header-time {
+        display: none !important; /* Hide clocks on very small screens to save space */
+    }
+
+    .header-role-badge {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+
+    /* Modal responsiveness */
+    .modal {
+        padding: 20px;
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+    }
+
+    /* Items in queue */
+    .queue-item {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .queue-type-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Table Card for mobile */
+@media (max-width: 640px) {
+    /* Hide some non-critical columns or add horizontal scroll hint */
+    td, th {
+        padding: 12px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Elite Polish */
+.animate-in {
+    animation: fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Utility Grid System */
+.responsive-grid {
+    display: grid;
+    gap: 24px;
+}
+
+.grid-2-1 {
+    grid-template-columns: 1.5fr 1fr;
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+    .grid-2-1, .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.elite-card {
+    background: var(--surface1);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    transition: var(--transition-smooth);
+}
+
+.elite-card:hover {
+    border-color: var(--border-focus);
+    background: var(--surface2);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+/* LOGIN PAGE RESPONSIVE */
+.login-container {
+    padding: 20px;
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 24px 20px !important;
+    }
+    .login-title {
+        font-size: 24px !important;
+    }
+    .login-logo-text {
+        font-size: 20px !important;
+    }
+}

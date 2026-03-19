@@ -631,6 +631,36 @@ export function LiveUpdatesPage() {
            animation: slideIn 0.3s ease-out;
         }
 
+        @media (max-width: 1024px) {
+           .activity-row {
+               grid-template-columns: 80px 120px 120px 1fr;
+           }
+           .row-action { display: none; }
+        }
+
+        @media (max-width: 768px) {
+           .live-header {
+               flex-direction: column;
+               align-items: flex-start;
+               gap: 16px;
+           }
+           .header-actions {
+               width: 100%;
+           }
+           .search-box {
+               flex: 1;
+           }
+           .filters-bar {
+               grid-template-columns: 1fr;
+           }
+           .activity-row {
+               grid-template-columns: 70px 1fr;
+               padding: 12px 16px;
+           }
+           .row-type, .row-bot { display: none; }
+           .message-meta { flex-wrap: wrap; }
+        }
+
         .activity-row:hover {
            background: rgba(255,255,255,0.02);
         }

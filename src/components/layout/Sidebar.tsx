@@ -15,6 +15,7 @@ import {
   Tags,
   Activity,
   Radio,
+  X,
 } from "lucide-react";
 
 export type Role = "superadmin" | "admin" | "moderator";
@@ -44,6 +45,7 @@ interface SidebarProps {
   pendingBotsCount: number;
   pendingWithdrawalsCount: number;
   pendingBroadcastsCount: number;
+  onClose?: () => void;
 }
 
 export const canAccess = (role: Role, page: Page): boolean => {
@@ -81,6 +83,7 @@ export function Sidebar({
   pendingBotsCount,
   pendingWithdrawalsCount,
   pendingBroadcastsCount,
+  onClose,
 }: SidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname.substring(1) || "dashboard";
@@ -225,10 +228,13 @@ export function Sidebar({
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="sidebar-logo">
         <div className="logo-icon">A</div>
-        <div>
+        <div className="logo-text-wrap">
           <div className="logo-text">AKHMADS.NET</div>
           <div className="logo-sub">admin panel v2.0</div>
         </div>
+        <button className="sidebar-close-btn" onClick={onClose}>
+          <X size={20} />
+        </button>
       </div>
 
       <div className="sidebar-nav">
@@ -252,7 +258,7 @@ export function Sidebar({
                   <span className="nav-icon">
                     <item.icon size={18} strokeWidth={2.5} />
                   </span>
-                  <span>{item.label}</span>
+                  <span className="nav-label-text">{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
                     <span
                       className={`nav-badge ${item.badge > 5 ? "red" : ""}`}
@@ -283,6 +289,45 @@ export function Sidebar({
               : "🔍 Moderator"}
         </div>
       </div>
+
+      <style>{`
+        .sidebar-logo {
+            justify-content: space-between;
+        }
+        .logo-text-wrap {
+            flex: 1;
+            min-width: 0;
+            margin-left: 12px;
+        }
+        .sidebar-close-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .sidebar-close-btn:hover {
+            background: var(--surface2);
+            color: #fff;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar-close-btn {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-label-text {
+                font-size: 13px;
+            }
+            .sidebar-logo {
+                padding: 16px 12px;
+            }
+        }
+      `}</style>
     </nav>
   );
 }
