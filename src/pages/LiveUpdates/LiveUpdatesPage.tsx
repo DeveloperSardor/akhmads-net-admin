@@ -20,7 +20,10 @@ import {
   DollarSign,
   User,
   ShieldCheck,
-  LayoutGrid,
+  TrendingUp,
+  BarChart3,
+  Signal,
+  ArrowUpRight,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 import type { BotResponse } from "../../api/services/bots.service";
@@ -40,55 +43,15 @@ interface LogEntry {
   data?: any;
 }
 
-const TYPE_THEME = {
-  success: {
-    icon: CheckCircle2,
-    color: "#10b981",
-    bg: "rgba(16,185,129,0.1)",
-    label: "Muvaffaqiyat",
-  },
-  error: {
-    icon: XCircle,
-    color: "#f43f5e",
-    bg: "rgba(244,63,94,0.1)",
-    label: "Xatolik",
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.1)",
-    label: "Ogohlantirish",
-  },
-  system: {
-    icon: Zap,
-    color: "#8b5cf6",
-    bg: "rgba(139,92,246,0.1)",
-    label: "Tizim",
-  },
-  broadcast: {
-    icon: Send,
-    color: "#6366f1",
-    bg: "rgba(99,102,241,0.1)",
-    label: "Broadcast",
-  },
-  ad: {
-    icon: Megaphone,
-    color: "#3b82f6",
-    bg: "rgba(59,130,246,0.1)",
-    label: "Reklama",
-  },
-  bot: {
-    icon: Bot,
-    color: "#14b8a6",
-    bg: "rgba(20,184,166,0.1)",
-    label: "Bot",
-  },
-  info: {
-    icon: Info,
-    color: "#0ea5e9",
-    bg: "rgba(14,165,233,0.1)",
-    label: "Ma'lumot",
-  },
+const TYPE_MAP = {
+  success: { label: "Muvaffaqiyat", color: "emerald", icon: CheckCircle2 },
+  error: { label: "Xatolik", color: "rose", icon: XCircle },
+  warning: { label: "Ehtiyotkorlik", color: "amber", icon: AlertTriangle },
+  system: { label: "Sistema", color: "purple", icon: Zap },
+  broadcast: { label: "Broadcast", color: "indigo", icon: Send },
+  ad: { label: "Reklama", color: "blue", icon: Megaphone },
+  bot: { label: "Bot Update", color: "teal", icon: Bot },
+  info: { label: "Ma'lumot", color: "sky", icon: Info },
 };
 
 export function LiveUpdatesPage() {
@@ -101,8 +64,6 @@ export function LiveUpdatesPage() {
 
   const socketRef = useRef<Socket | null>(null);
 
-  const FILTERS = ["all", "bot", "system", "ad", "broadcast"];
-
   useEffect(() => {
     const fetchBots = async () => {
       try {
@@ -112,7 +73,7 @@ export function LiveUpdatesPage() {
         });
         setAllBots(res.data || []);
       } catch (err) {
-        console.error("Failed to fetch bots", err);
+        console.error(err);
       }
     };
     fetchBots();
@@ -134,7 +95,7 @@ export function LiveUpdatesPage() {
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("terminal:log", (log: LogEntry) => {
-      setLogs((prev) => [log, ...prev].slice(0, 300));
+      setLogs((prev) => [log, ...prev].slice(0, 200));
     });
 
     socketRef.current = socket;
@@ -151,337 +112,361 @@ export function LiveUpdatesPage() {
       const matchesSearch =
         !searchQuery ||
         log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.data?.username?.toLowerCase().includes(searchQuery.toLowerCase());
-
+        log.data?.userId?.includes(searchQuery);
       return matchesType && matchesBot && matchesSearch;
     });
   }, [logs, typeFilter, botFilter, searchQuery]);
 
+  // Statistics for the sidebar
+  const stats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    logs.forEach((l) => (counts[l.type] = (counts[l.type] || 0) + 1));
+    return counts;
+  }, [logs]);
+
   return (
-    <div className="min-h-screen bg-[#050505] p-2 sm:p-6 lg:p-8 font-sans transition-all duration-500">
-      {/* Header Stats & Title */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8 items-end">
-        <div className="md:col-span-8 flex items-center gap-6">
-          <div className="relative">
-            <div
-              className={`absolute inset-0 rounded-3xl blur-2xl opacity-20 ${isConnected ? "bg-emerald-500" : "bg-rose-500"} animate-pulse`}
-            ></div>
-            <div className="relative p-5 bg-[#121214] border border-white/10 rounded-3xl shadow-2xl">
-              <Radio
-                className={`w-8 h-8 ${isConnected ? "text-emerald-400" : "text-rose-400"}`}
-              />
-            </div>
+    <div className="min-h-screen bg-[#050608] text-slate-200 p-4 md:p-8 font-sans">
+      {/* Top Navigation / Status Bar */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.15)] overflow-hidden relative">
+            <div className="absolute inset-0 bg-primary opacity-5 animate-pulse"></div>
+            <Signal
+              className={`w-7 h-7 ${isConnected ? "text-primary" : "text-slate-700 animate-pulse"}`}
+            />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-white tracking-tighter sm:text-5xl">
-              Jonli <span className="text-primary italic">Yangilanishlar</span>
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              Monitor Center
             </h1>
-            <div className="flex items-center gap-3 mt-2">
-              <span
-                className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full ${isConnected ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}
-              >
-                <div
-                  className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400 animate-ping" : "bg-rose-400"}`}
-                />
-                {isConnected
-                  ? "Sistema bilan ulanish mavjud"
-                  : "Ulanish uzildi"}
-              </span>
-              <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">
-                Latency: 24ms • Server: AKHMADS-API-01
+            <div className="flex items-center gap-2 mt-1">
+              <div
+                className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-rose-500 shadow-[0_0_8px_#f43f5e]"}`}
+              ></div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                {isConnected ? "Network Connected" : "Connection Lost"} • v2.4.0
               </span>
             </div>
           </div>
         </div>
 
-        <div className="md:col-span-4 flex justify-end gap-3">
+        <div className="flex flex-wrap items-center gap-3 bg-slate-900/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
+          {["all", "bot", "ad", "broadcast", "system"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                typeFilter === t
+                  ? "bg-primary text-white shadow-lg"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+          <div className="w-px h-6 bg-white/10 mx-2"></div>
           <button
             onClick={() => setLogs([])}
-            className="flex items-center gap-2 px-6 py-4 bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-gray-400 hover:text-rose-400 rounded-2xl transition-all font-black text-xs uppercase tracking-widest group"
+            className="p-2.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+            title="Clear stream"
           >
-            <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-            Tozalash
+            <Trash2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* Sidebar Controls */}
-        <div className="xl:col-span-1 space-y-6">
-          {/* Quick Stats */}
-          <div className="bg-[#0f0f11] border border-white/5 rounded-[2.5rem] p-6 space-y-6 shadow-2xl shadow-black">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-400 font-bold text-xs uppercase tracking-widest">
-                <Activity className="w-4 h-4 text-primary" />
-                Statistika
-              </div>
-              <LayoutGrid className="w-4 h-4 text-gray-700" />
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <SimpleStat
-                label="Jami xabarlar"
-                value={logs.length}
-                color="text-indigo-400"
-              />
-              <SimpleStat
-                label="Monitoring"
-                value={allBots.length}
-                color="text-teal-400"
-                sub="ta aktiv bot"
-              />
-            </div>
-          </div>
-
-          {/* Filters Card */}
-          <div className="bg-[#0f0f11] border border-white/5 rounded-[2.5rem] p-6 space-y-6">
-            <div className="flex items-center gap-2 text-gray-400 font-bold text-xs uppercase tracking-widest">
-              <Filter className="w-4 h-4 text-primary" />
-              Filtrlash Paneli
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">
-                Kategoriya bo'yicha
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setTypeFilter(f)}
-                    className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
-                      typeFilter === f
-                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
-                        : "bg-white/[0.03] text-gray-500 border-white/5 hover:bg-white/10"
-                    }`}
-                  >
-                    {f === "all" ? "Barchasi" : f}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">
-                Bot ixtiyoriy
-              </label>
-              <select
-                className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 px-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-all cursor-pointer appearance-none"
-                value={botFilter}
-                onChange={(e) => setBotFilter(e.target.value)}
-              >
-                <option value="all">Barcha Botlar</option>
-                {allBots.map((b) => (
-                  <option key={b.id} value={b.username}>
-                    @{b.username}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Search Card */}
-          <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-6 space-y-4">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60 group-focus-within:text-primary transition-colors" />
+        {/* Main Event Stream */}
+        <div className="xl:col-span-3 space-y-4">
+          <div className="flex items-center justify-between mb-4 px-2">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+              <Radio className="w-4 h-4 text-emerald-500" />
+              Live Stream Intelligence
+            </h2>
+            <div className="relative group min-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
               <input
                 type="text"
-                placeholder="Izlash (ID, User...)"
-                className="w-full bg-black/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search events, IDs, or text..."
+                className="w-full bg-slate-900/50 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-xs focus:bg-slate-900 focus:border-primary/50 transition-all outline-none"
               />
             </div>
           </div>
-        </div>
 
-        {/* Main Activity Feed */}
-        <div className="xl:col-span-3">
-          <div className="flex items-center justify-between mb-6 px-4">
-            <div className="flex items-center gap-3">
-              <Radio className="w-5 h-5 text-emerald-500 animate-pulse" />
-              <span className="text-white font-black text-sm uppercase tracking-widest">
-                Faoliyat oqimi
-              </span>
-            </div>
-            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-              Displaying {filteredLogs.length} events
-            </span>
-          </div>
-
-          <div className="space-y-4 max-h-[1000px] overflow-y-auto pr-2 custom-scrollbar pb-10">
+          <div className="space-y-3 pb-20">
             {filteredLogs.length > 0 ? (
-              filteredLogs.map((log, i) => (
-                <LogCard key={i} log={log} index={i} />
-              ))
+              filteredLogs.map((log, i) => <EventCard key={i} log={log} />)
             ) : (
-              <EmptyState isConnected={isConnected} />
+              <EmptyStream isConnected={isConnected} />
             )}
           </div>
         </div>
+
+        {/* Intelligence Sidebar */}
+        <div className="xl:col-span-1 space-y-8">
+          {/* Bot Filter Card */}
+          <div className="glass-panel p-6">
+            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest mb-6">
+              <Bot className="w-4 h-4 text-primary" />
+              Filter By Target
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <BotItem
+                name="All Bots"
+                username="all"
+                icon={LayoutGrid}
+                active={botFilter === "all"}
+                onClick={() => setBotFilter("all")}
+              />
+              {allBots.map((bot) => (
+                <BotItem
+                  key={bot.id}
+                  name={bot.name}
+                  username={bot.username}
+                  active={botFilter === bot.username}
+                  onClick={() => setBotFilter(bot.username)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <MetricCard
+              label="System Integrity"
+              value="99.9%"
+              icon={ShieldCheck}
+              growth="+0.02%"
+            />
+            <MetricCard
+              label="Active Listeners"
+              value="2,481"
+              icon={Activity}
+              growth="+12%"
+            />
+          </div>
+
+          {/* Event Distribution */}
+          <div className="glass-panel p-6">
+            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest mb-6">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Event Distribution
+            </div>
+            <div className="space-y-4">
+              {Object.entries(TYPE_MAP)
+                .slice(4)
+                .map(([type, config]) => (
+                  <div key={type} className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <span>{config.label}</span>
+                      <span>{stats[type] || 0}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-${config.color}-500/50 transition-all duration-1000`}
+                        style={{
+                          width: `${((stats[type] || 0) / logs.length) * 100 || 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
       </div>
+
+      <style>{`
+        .glass-panel {
+           background: rgba(15, 23, 42, 0.4);
+           backdrop-filter: blur(12px);
+           border: 1px solid rgba(255, 255, 255, 0.05);
+           border-radius: 2rem;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+      `}</style>
     </div>
   );
 }
 
-function SimpleStat({ label, value, color, sub }: any) {
-  return (
-    <div className="bg-black/20 border border-white/5 p-4 rounded-2xl">
-      <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">
-        {label}
-      </div>
-      <div className={`text-2xl font-black ${color} tracking-tighter`}>
-        {value}
-      </div>
-      {sub && (
-        <div className="text-[9px] text-gray-700 font-bold mt-1 uppercase">
-          {sub}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LogCard({ log, index }: { log: LogEntry; index: number }) {
-  const theme =
-    TYPE_THEME[log.type as keyof typeof TYPE_THEME] || TYPE_THEME.info;
-  const Icon = theme.icon;
+function EventCard({ log }: { log: LogEntry }) {
+  const type = TYPE_MAP[log.type as keyof typeof TYPE_MAP] || TYPE_MAP.info;
+  const Icon = type.icon;
+  const isBotEvent = log.type === "bot";
 
   return (
-    <div
-      className="group bg-[#0f0f11] hover:bg-[#141417] border border-white/5 hover:border-white/10 rounded-[2rem] p-5 sm:p-6 transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl shadow-none"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
-      <div className="flex flex-col sm:flex-row gap-5 items-start">
-        {/* Left Icon Block */}
-        <div className="shrink-0 flex sm:flex-col items-center gap-4">
-          <div className="relative group/icon">
-            <div
-              className="absolute inset-0 rounded-2xl blur-lg transition-all duration-300 opacity-0 group-hover/icon:opacity-40"
-              style={{ backgroundColor: theme.color }}
-            ></div>
-            <div className="relative p-4 rounded-2xl border border-white/5 bg-[#1a1a1c] transition-transform group-hover/icon:-rotate-6">
-              <Icon className="w-5 h-5" style={{ color: theme.color }} />
-            </div>
+    <div className="group animate-in fade-in slide-in-from-left-4 duration-500">
+      <div className="flex gap-4">
+        {/* Vertical Time/Icon axis */}
+        <div className="flex flex-col items-center shrink-0 w-12">
+          <div
+            className={`p-2.5 rounded-xl border border-white/5 bg-slate-900/80 text-${type.color}-400 shadow-xl group-hover:scale-110 transition-transform duration-300`}
+          >
+            <Icon className="w-5 h-5" />
           </div>
-          <div className="sm:h-20 w-px bg-white/5 hidden sm:block"></div>
+          <div className="w-px h-full bg-gradient-to-b from-white/10 to-transparent my-2"></div>
         </div>
 
-        {/* Content Block */}
-        <div className="flex-1 min-w-0 space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-1.5 text-gray-500 font-bold text-[10px] uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full">
-              <Clock className="w-3 h-3 text-gray-700" />
-              {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </span>
-            <span
-              className="text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1 rounded-lg border border-white/5"
-              style={{ color: theme.color, backgroundColor: theme.bg }}
-            >
-              {theme.label}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <h3 className="text-white/90 text-[16px] font-medium leading-relaxed tracking-tight break-words">
-              {log.message}
-            </h3>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {log.data?.username && (
-                <Badge
-                  icon={User}
-                  label={`@${log.data.username}`}
-                  color="text-indigo-400"
-                  bg="bg-indigo-400/5"
-                />
-              )}
-              {log.data?.lang && (
-                <Badge
-                  icon={Globe}
-                  label={log.data.lang}
-                  color="text-sky-400"
-                  bg="bg-sky-400/5"
-                  border
-                />
-              )}
-              {log.data?.amount && (
-                <Badge
-                  icon={DollarSign}
-                  label={`$${log.data.amount}`}
-                  color="text-emerald-400"
-                  bg="bg-emerald-400/5"
-                  border
-                />
-              )}
+        {/* Card Content */}
+        <div className="flex-1 bg-slate-900/40 hover:bg-slate-900/60 transition-all border border-white/5 p-5 rounded-3xl relative overflow-hidden group-hover:border-primary/20">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div
+                className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded bg-${type.color}-500/10 text-${type.color}-400 border border-${type.color}-500/20`}
+              >
+                {type.label}
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1.5">
+                <Clock className="w-3 h-3" />
+                {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
+                  hour12: false,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </span>
             </div>
-          </div>
-
-          {log.data?.details && (
-            <div className="text-[11px] text-gray-600 font-medium bg-black/30 px-3 py-2 rounded-xl italic border border-white/5">
-              "{log.data.details}"
-            </div>
-          )}
-        </div>
-
-        {/* Right Action Block */}
-        {log.data?.botUsername && (
-          <div className="shrink-0 pt-2 sm:pt-0">
-            <a
-              href={`https://t.me/${log.data.botUsername}`}
-              target="_blank"
-              rel="noreferrer"
-              className="group/link flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-3xl transition-all"
-            >
-              <div className="flex flex-col items-end">
-                <div className="text-[8px] text-gray-500 font-black uppercase tracking-widest group-hover/link:text-primary transition-colors">
-                  Target Bot
-                </div>
-                <div className="text-sm font-bold text-gray-300">
+            {log.data?.botUsername && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium text-slate-500 hidden sm:inline">
+                  Via Bot:
+                </span>
+                <a
+                  href={`https://t.me/${log.data.botUsername}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold text-primary hover:underline"
+                >
                   @{log.data.botUsername}
-                </div>
+                </a>
               </div>
-              <div className="p-2 bg-black/40 rounded-xl group-hover/link:translate-x-1 transition-all">
-                <ChevronRight className="w-4 h-4 text-gray-500 group-hover/link:text-white" />
-              </div>
-            </a>
+            )}
           </div>
-        )}
+
+          {/* Message Body */}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-200 leading-relaxed mb-4">
+                {log.message}
+              </p>
+
+              {/* Metadata Chips */}
+              <div className="flex flex-wrap gap-2">
+                {log.data?.username && (
+                  <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg text-xs text-slate-400">
+                    <User className="w-3 h-3 text-slate-500" />
+                    {log.data.username}
+                  </div>
+                )}
+                {log.data?.userId && (
+                  <div className="bg-white/5 px-2.5 py-1 rounded-lg text-[10px] text-slate-600 font-mono">
+                    ID: {log.data.userId}
+                  </div>
+                )}
+                {log.data?.lang && (
+                  <div className="flex items-center gap-1.5 bg-blue-500/5 border border-blue-500/10 px-2 py-1 rounded-lg text-[10px] font-bold text-blue-400 uppercase">
+                    <Globe className="w-3 h-3" />
+                    {log.data.lang}
+                  </div>
+                )}
+                {log.data?.amount && (
+                  <div className="flex items-center gap-1.5 bg-emerald-500/5 border border-emerald-500/10 px-2 py-1 rounded-lg text-[10px] font-bold text-emerald-400">
+                    <DollarSign className="w-3 h-3" />
+                    {log.data.amount}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Action / Visual */}
+            {isBotEvent && (
+              <div className="shrink-0 flex items-center justify-center p-4 bg-primary/5 border border-primary/10 rounded-2xl group-hover:bg-primary/10 transition-colors">
+                <TrendingUp className="w-5 h-5 text-primary opacity-40 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
+          </div>
+
+          {/* Hover Glow */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </div>
       </div>
     </div>
   );
 }
 
-function Badge({ icon: Icon, label, color, bg, border }: any) {
+function BotItem({ name, username, active, onClick, icon: CustomIcon }: any) {
+  const Icon = CustomIcon || Bot;
   return (
-    <div
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${bg} ${border ? "border border-white/5" : ""}`}
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all border ${
+        active
+          ? "bg-primary/20 border-primary/40 text-white"
+          : "bg-transparent border-transparent text-slate-500 hover:bg-white/5"
+      }`}
     >
-      <Icon className={`w-3 h-3 ${color}`} />
-      <span
-        className={`text-[11px] font-bold ${color} tracking-tight uppercase`}
+      <div
+        className={`p-2 rounded-xl transition-colors ${active ? "bg-primary text-white" : "bg-slate-900"}`}
       >
-        {label}
-      </span>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="text-left overflow-hidden">
+        <div
+          className={`text-xs font-bold leading-none mb-1 truncate ${active ? "text-white" : "text-slate-300"}`}
+        >
+          {name}
+        </div>
+        <div className="text-[10px] font-medium opacity-50 truncate">
+          @{username}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function MetricCard({ label, value, icon: Icon, growth }: any) {
+  return (
+    <div className="glass-panel p-6 flex flex-col gap-4">
+      <div className="flex justify-between items-start">
+        <div className="p-3 bg-slate-900 rounded-2xl border border-white/5">
+          <Icon className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex items-center gap-1 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">
+          <ArrowUpRight className="w-3 h-3" />
+          {growth}
+        </div>
+      </div>
+      <div>
+        <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">
+          {label}
+        </div>
+        <div className="text-3xl font-bold text-white tracking-tighter">
+          {value}
+        </div>
+      </div>
     </div>
   );
 }
 
-function EmptyState({ isConnected }: any) {
+function EmptyStream({ isConnected }: { isConnected: boolean }) {
   return (
-    <div className="p-20 flex flex-col items-center justify-center gap-6 animate-pulse opacity-20">
-      <ShieldCheck className="w-20 h-20 text-gray-600" />
-      <div className="text-center">
-        <div className="text-2xl font-black text-white uppercase tracking-widest">
-          {isConnected ? "Oqim bo'sh" : "Offline"}
-        </div>
-        <div className="text-gray-600 text-sm font-bold uppercase tracking-widest mt-2">
-          {isConnected ? "Hozircha yangiliklar yo'q" : "Ulanish kutilmoqda..."}
-        </div>
+    <div className="py-20 text-center space-y-4">
+      <div className="relative inline-block">
+        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
+        <Zap className="w-20 h-20 text-slate-800 relative z-10 mx-auto" />
       </div>
+      <div className="text-xl font-bold text-white">
+        {isConnected ? "Waiting for activity..." : "Network Offline"}
+      </div>
+      <p className="text-slate-500 text-sm max-w-xs mx-auto">
+        {isConnected
+          ? "Connection is live. Whenever a bot event occurs, it will appear here instantly."
+          : "Trying to re-establish connection with AKHMADS Intelligence Services."}
+      </p>
     </div>
   );
 }
