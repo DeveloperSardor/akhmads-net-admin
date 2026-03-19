@@ -87,7 +87,14 @@ const TYPE_CONFIG: Record<string, any> = {
 };
 
 export function LiveUpdatesPage() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem("live_logs_history");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [isConnected, setIsConnected] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [botFilter, setBotFilter] = useState<string>("all");
@@ -138,7 +145,11 @@ export function LiveUpdatesPage() {
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("terminal:log", (log: LogEntry) => {
-      setLogs((prev) => [log, ...prev].slice(0, 200));
+      setLogs((prev) => {
+        const newLogs = [log, ...prev].slice(0, 1000); // Keep 1000 in memory & storage
+        localStorage.setItem("live_logs_history", JSON.stringify(newLogs));
+        return newLogs;
+      });
     });
 
     socketRef.current = socket;
@@ -209,7 +220,13 @@ export function LiveUpdatesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="clear-btn" onClick={() => setLogs([])}>
+          <button
+            className="clear-btn"
+            onClick={() => {
+              setLogs([]);
+              localStorage.removeItem("live_logs_history");
+            }}
+          >
             <Trash2 size={16} /> Tozalash
           </button>
         </div>
