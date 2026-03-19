@@ -15,13 +15,13 @@ import {
   Radio,
   Search,
   Filter,
-  ChevronDown,
+  ChevronRight,
   Clock,
   Globe,
   DollarSign,
   User,
   ShieldCheck,
-  ZapOff,
+  LayoutGrid,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 import type { BotResponse } from "../../api/services/bots.service";
@@ -41,69 +41,53 @@ interface LogEntry {
   data?: any;
 }
 
-const TYPE_CONFIG = {
+const TYPE_THEME = {
   success: {
     icon: CheckCircle2,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    accent: "bg-emerald-500",
+    color: "#10b981",
+    bg: "rgba(16,185,129,0.1)",
     label: "Muvaffaqiyat",
   },
   error: {
     icon: XCircle,
-    color: "text-rose-400",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/20",
-    accent: "bg-rose-500",
+    color: "#f43f5e",
+    bg: "rgba(244,63,94,0.1)",
     label: "Xatolik",
   },
   warning: {
     icon: AlertTriangle,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
-    accent: "bg-amber-500",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.1)",
     label: "Ogohlantirish",
   },
   system: {
     icon: Zap,
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
-    border: "border-purple-500/20",
-    accent: "bg-purple-500",
+    color: "#8b5cf6",
+    bg: "rgba(139,92,246,0.1)",
     label: "Tizim",
   },
   broadcast: {
     icon: Send,
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
-    border: "border-indigo-500/20",
-    accent: "bg-indigo-500",
+    color: "#6366f1",
+    bg: "rgba(99,102,241,0.1)",
     label: "Broadcast",
   },
   ad: {
     icon: Megaphone,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
-    accent: "bg-blue-500",
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.1)",
     label: "Reklama",
   },
   bot: {
     icon: Bot,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10",
-    border: "border-teal-500/20",
-    accent: "bg-teal-500",
+    color: "#14b8a6",
+    bg: "rgba(20,184,166,0.1)",
     label: "Bot",
   },
   info: {
     icon: Info,
-    color: "text-sky-400",
-    bg: "bg-sky-500/10",
-    border: "border-sky-500/20",
-    accent: "bg-sky-500",
+    color: "#0ea5e9",
+    bg: "rgba(14,165,233,0.1)",
     label: "Ma'lumot",
   },
 };
@@ -116,20 +100,10 @@ export function LiveUpdatesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [allBots, setAllBots] = useState<BotResponse[]>([]);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  const FILTERS = [
-    "all",
-    "bot",
-    "system",
-    "ad",
-    "broadcast",
-    "success",
-    "error",
-  ];
+  const FILTERS = ["all", "bot", "system", "ad", "broadcast"];
 
-  // Fetch Bots for filter
   useEffect(() => {
     const fetchBots = async () => {
       try {
@@ -145,7 +119,6 @@ export function LiveUpdatesPage() {
     fetchBots();
   }, []);
 
-  // Socket setup
   useEffect(() => {
     const token =
       localStorage.getItem("token") || localStorage.getItem("accessToken");
@@ -159,35 +132,10 @@ export function LiveUpdatesPage() {
       withCredentials: true,
     });
 
-    socket.on("connect", () => {
-      setIsConnected(true);
-      setLogs((prev) => [
-        {
-          timestamp: new Date().toISOString(),
-          message:
-            "Live kanal bilan muvaffaqiyatli ulanildi. Botlar kuzatilmoqda...",
-          type: "system",
-        },
-        ...prev,
-      ]);
-    });
-
+    socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
-
-    socket.on("connect_error", (error) => {
-      setIsConnected(false);
-      setLogs((prev) => [
-        {
-          timestamp: new Date().toISOString(),
-          message: `Ulanish xatosi: ${error.message}`,
-          type: "error",
-        },
-        ...prev,
-      ]);
-    });
-
     socket.on("terminal:log", (log: LogEntry) => {
-      setLogs((prev) => [log, ...prev].slice(0, 500));
+      setLogs((prev) => [log, ...prev].slice(0, 300));
     });
 
     socketRef.current = socket;
@@ -200,198 +148,175 @@ export function LiveUpdatesPage() {
     return logs.filter((log) => {
       const matchesType = typeFilter === "all" || log.type === typeFilter;
       const matchesBot =
-        botFilter === "all" ||
-        log.data?.botUsername === botFilter ||
-        log.data?.botId === botFilter;
+        botFilter === "all" || log.data?.botUsername === botFilter;
       const matchesSearch =
         !searchQuery ||
         log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.data?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.data?.userId?.toLowerCase().includes(searchQuery.toLowerCase());
+        log.data?.username?.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesType && matchesBot && matchesSearch;
     });
   }, [logs, typeFilter, botFilter, searchQuery]);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
-      {/* Header Section */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+    <div className="min-h-screen bg-[#050505] p-2 sm:p-6 lg:p-8 font-sans transition-all duration-500">
+      {/* Header Stats & Title */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8 items-end">
+        <div className="md:col-span-8 flex items-center gap-6">
+          <div className="relative">
+            <div
+              className={`absolute inset-0 rounded-3xl blur-2xl opacity-20 ${isConnected ? "bg-emerald-500" : "bg-rose-500"} animate-pulse`}
+            ></div>
+            <div className="relative p-5 bg-[#121214] border border-white/10 rounded-3xl shadow-2xl">
               <Radio
-                className={`w-6 h-6 text-primary ${isConnected ? "animate-pulse" : ""}`}
+                className={`w-8 h-8 ${isConnected ? "text-emerald-400" : "text-rose-400"}`}
               />
             </div>
-            <div>
-              <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
-                Jonli Efir <span className="text-primary">Terminal</span>
-              </h1>
-              <p className="text-sm text-gray-500 font-medium tracking-wide uppercase">
-                Real-time network monitoring & bot activity
-              </p>
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-white tracking-tighter sm:text-5xl">
+              Jonli <span className="text-primary italic">Yangilanishlar</span>
+            </h1>
+            <div className="flex items-center gap-3 mt-2">
+              <span
+                className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full ${isConnected ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}
+              >
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-400 animate-ping" : "bg-rose-400"}`}
+                />
+                {isConnected
+                  ? "Sistema bilan ulanish mavjud"
+                  : "Ulanish uzildi"}
+              </span>
+              <span className="text-gray-600 text-[10px] font-bold uppercase tracking-widest hidden sm:inline">
+                Latency: 24ms • Server: AKHMADS-API-01
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div className="flex flex-wrap items-center gap-4">
-          <StatCard
-            icon={Activity}
-            label="Ulanish"
-            value={isConnected ? "NORMAL" : "OFFLINE"}
-            color={isConnected ? "text-emerald-400" : "text-rose-400"}
-            sub={isConnected ? "Socket Active" : "Waiting..."}
-          />
-          <StatCard
-            icon={MessageSquare}
-            label="Hodisalar"
-            value={logs.length.toString()}
-            color="text-blue-400"
-            sub="Oxirgi 500 ta"
-          />
-          <StatCard
-            icon={Bot}
-            label="Botlar"
-            value={allBots.length.toString()}
-            color="text-teal-400"
-            sub="Tizimda faol"
-          />
-        </div>
-      </div>
-
-      {/* Control Panel */}
-      <div className="bg-[#0e0e11] border border-white/5 rounded-[2rem] p-4 flex flex-col lg:flex-row gap-4 items-center shadow-xl">
-        {/* Search */}
-        <div className="relative w-full lg:w-96 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Xabar yoki foydalanuvchi bo'yicha qidirish..."
-            className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Type Filter */}
-        <div className="flex flex-wrap gap-2 items-center px-4 py-2 bg-white/[0.02] rounded-2xl border border-white/5">
-          <Filter className="w-4 h-4 text-gray-500 mr-2" />
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setTypeFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                typeFilter === f
-                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                  : "bg-transparent text-gray-500 border-transparent hover:bg-white/5 hover:text-gray-300"
-              }`}
-            >
-              {f === "all"
-                ? "BARCHASI"
-                : TYPE_CONFIG[f as keyof typeof TYPE_CONFIG]?.label || f}
-            </button>
-          ))}
-        </div>
-
-        {/* Bot Filter */}
-        <div className="relative w-full lg:w-64 group ml-auto">
-          <Bot className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary transition-colors pointer-events-none" />
-          <select
-            className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-3 pl-11 pr-10 text-sm text-white focus:outline-none focus:border-primary/50 focus:bg-white/[0.05] appearance-none cursor-pointer transition-all"
-            value={botFilter}
-            onChange={(e) => setBotFilter(e.target.value)}
+        <div className="md:col-span-4 flex justify-end gap-3">
+          <button
+            onClick={() => setLogs([])}
+            className="flex items-center gap-2 px-6 py-4 bg-white/5 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-gray-400 hover:text-rose-400 rounded-2xl transition-all font-black text-xs uppercase tracking-widest group"
           >
-            <option value="all">Barcha Botlar</option>
-            {allBots.map((b) => (
-              <option key={b.id} value={b.username}>
-                @{b.username}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            <Trash2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            Tozalash
+          </button>
         </div>
-
-        <button
-          onClick={() => setLogs([])}
-          className="flex items-center gap-2 px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-2xl text-xs font-bold transition-all ml-2"
-        >
-          <Trash2 className="w-4 h-4" />
-          TOZALASH
-        </button>
       </div>
 
-      {/* Main Terminal Feed */}
-      <div className="bg-[#0a0a0b] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl relative flex flex-col">
-        {/* Header */}
-        <div className="px-8 py-6 bg-gradient-to-r from-white/[0.03] to-transparent border-b border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="w-2.5 h-2.5 rounded-full bg-white/10 border border-white/5"
-                />
-              ))}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        {/* Sidebar Controls */}
+        <div className="xl:col-span-1 space-y-6">
+          {/* Quick Stats */}
+          <div className="bg-[#0f0f11] border border-white/5 rounded-[2.5rem] p-6 space-y-6 shadow-2xl shadow-black">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-400 font-bold text-xs uppercase tracking-widest">
+                <Activity className="w-4 h-4 text-primary" />
+                Statistika
+              </div>
+              <LayoutGrid className="w-4 h-4 text-gray-700" />
             </div>
-            <span className="text-xs font-bold text-gray-400 tracking-[0.2em] uppercase">
-              System Live Feed{" "}
-              <span className="text-gray-600 ml-2">
-                [{filteredLogs.length}]
+            <div className="grid grid-cols-1 gap-4">
+              <SimpleStat
+                label="Jami xabarlar"
+                value={logs.length}
+                color="text-indigo-400"
+              />
+              <SimpleStat
+                label="Monitoring"
+                value={allBots.length}
+                color="text-teal-400"
+                sub="ta aktiv bot"
+              />
+            </div>
+          </div>
+
+          {/* Filters Card */}
+          <div className="bg-[#0f0f11] border border-white/5 rounded-[2.5rem] p-6 space-y-6">
+            <div className="flex items-center gap-2 text-gray-400 font-bold text-xs uppercase tracking-widest">
+              <Filter className="w-4 h-4 text-primary" />
+              Filtrlash Paneli
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">
+                Kategoriya bo'yicha
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {FILTERS.map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setTypeFilter(f)}
+                    className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                      typeFilter === f
+                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
+                        : "bg-white/[0.03] text-gray-500 border-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    {f === "all" ? "Barchasi" : f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] text-gray-600 font-black uppercase tracking-widest ml-1">
+                Bot ixtiyoriy
+              </label>
+              <select
+                className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 px-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-all cursor-pointer appearance-none"
+                value={botFilter}
+                onChange={(e) => setBotFilter(e.target.value)}
+              >
+                <option value="all">Barcha Botlar</option>
+                {allBots.map((b) => (
+                  <option key={b.id} value={b.username}>
+                    @{b.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Search Card */}
+          <div className="bg-primary/5 border border-primary/20 rounded-[2.5rem] p-6 space-y-4">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60 group-focus-within:text-primary transition-colors" />
+              <input
+                type="text"
+                placeholder="Izlash (ID, User...)"
+                className="w-full bg-black/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Activity Feed */}
+        <div className="xl:col-span-3">
+          <div className="flex items-center justify-between mb-6 px-4">
+            <div className="flex items-center gap-3">
+              <Radio className="w-5 h-5 text-emerald-500 animate-pulse" />
+              <span className="text-white font-black text-sm uppercase tracking-widest">
+                Faoliyat oqimi
               </span>
+            </div>
+            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+              Displaying {filteredLogs.length} events
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold bg-white/[0.03] px-3 py-1.5 rounded-full">
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`}
-              />
-              {isConnected ? "NETWORK ACTIVE" : "CONNECTION LOST"}
-            </div>
-          </div>
-        </div>
 
-        {/* Feed Container */}
-        <div className="overflow-y-auto max-h-[80vh] min-h-[500px] scrollbar-hide">
-          {!isConnected && filteredLogs.length === 0 && (
-            <div className="h-[500px] flex flex-col items-center justify-center gap-6 p-10 animate-in fade-in duration-700">
-              <div className="relative">
-                <Radio className="w-20 h-20 text-gray-800 animate-ping absolute inset-0 opacity-20" />
-                <Radio className="w-20 h-20 text-primary/40 relative z-10" />
-                <ZapOff className="absolute -top-2 -right-2 w-8 h-8 text-rose-500/50" />
-              </div>
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Ulanish kutilmoqda
-                </h3>
-                <p className="text-gray-500 max-w-xs mx-auto text-sm">
-                  Server bilan WebSocket aloqasi o'rnatilmoqda. Iltimos
-                  kuting...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isConnected && filteredLogs.length === 0 && (
-            <div className="h-[500px] flex flex-col items-center justify-center gap-6 p-10 grayscale opacity-50">
-              <ShieldCheck className="w-16 h-16 text-primary" />
-              <div className="text-center">
-                <h3 className="text-lg font-bold text-white mb-1">
-                  Hozircha hech narsa yo'q
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Tanlangan filtrlar bo'yicha hodisalar topilmadi.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="divide-y divide-white/[0.03]">
-            {filteredLogs.map((log, i) => (
-              <FeedItem key={i} log={log} />
-            ))}
-            <div ref={bottomRef} className="h-4" />
+          <div className="space-y-4 max-h-[1000px] overflow-y-auto pr-2 custom-scrollbar pb-10">
+            {filteredLogs.length > 0 ? (
+              filteredLogs.map((log, i) => (
+                <LogCard key={i} log={log} index={i} />
+              ))
+            ) : (
+              <EmptyState isConnected={isConnected} />
+            )}
           </div>
         </div>
       </div>
@@ -399,119 +324,165 @@ export function LiveUpdatesPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color, sub }: any) {
+function SimpleStat({ label, value, color, sub }: any) {
   return (
-    <div className="bg-[#0e0e11] border border-white/5 rounded-2xl p-4 min-w-[160px] flex flex-col gap-1 transition-all hover:border-white/10">
-      <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${color}`} />
-        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
-          {label}
-        </span>
+    <div className="bg-black/20 border border-white/5 p-4 rounded-2xl">
+      <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">
+        {label}
       </div>
-      <div className={`text-xl font-black ${color} tracking-tight`}>
+      <div className={`text-2xl font-black ${color} tracking-tighter`}>
         {value}
       </div>
-      <div className="text-[10px] text-gray-600 font-bold">{sub}</div>
+      {sub && (
+        <div className="text-[9px] text-gray-700 font-bold mt-1 uppercase">
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
 
-function FeedItem({ log }: { log: LogEntry }) {
-  const config =
-    TYPE_CONFIG[log.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.info;
-  const Icon = config.icon;
+function LogCard({ log, index }: { log: LogEntry; index: number }) {
+  const theme =
+    TYPE_THEME[log.type as keyof typeof TYPE_THEME] || TYPE_THEME.info;
+  const Icon = theme.icon;
 
   return (
-    <div className="group flex flex-col md:flex-row gap-4 items-start px-8 py-5 hover:bg-white/[0.02] transition-colors border-l-4 border-l-transparent hover:border-l-primary/40">
-      {/* Type Icon */}
-      <div
-        className={`p-2.5 rounded-xl border ${config.bg} ${config.border} shrink-0 mt-1`}
-      >
-        <Icon className={`w-5 h-5 ${config.color}`} />
-      </div>
-
-      {/* Time column */}
-      <div className="w-20 pt-1 shrink-0 flex flex-col gap-1">
-        <div className="flex items-center gap-1.5 text-gray-600">
-          <Clock className="w-3 h-3" />
-          <span className="text-[10px] font-mono font-bold tracking-tight">
-            {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            })}
-          </span>
-        </div>
-        <div
-          className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border self-center ${config.bg} ${config.color} ${config.border}`}
-        >
-          {config.label}
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          {/* Primary message */}
-          <p className="text-[15px] font-medium text-white/90 leading-snug">
-            {log.message}
-          </p>
-
-          {/* User badge */}
-          {(log.data?.username || log.data?.userId) && (
-            <div className="flex items-center gap-1.5 bg-white/[0.05] border border-white/5 px-2 py-0.5 rounded-lg">
-              <User className="w-3 h-3 text-gray-500" />
-              <span className="text-[11px] font-bold text-gray-400">
-                {log.data.username
-                  ? `@${log.data.username}`
-                  : `ID: ${log.data.userId}`}
-              </span>
+    <div
+      className="group bg-[#0f0f11] hover:bg-[#141417] border border-white/5 hover:border-white/10 rounded-[2rem] p-5 sm:p-6 transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl shadow-none"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <div className="flex flex-col sm:flex-row gap-5 items-start">
+        {/* Left Icon Block */}
+        <div className="shrink-0 flex sm:flex-col items-center gap-4">
+          <div className="relative group/icon">
+            <div
+              className="absolute inset-0 rounded-2xl blur-lg transition-all duration-300 opacity-0 group-hover/icon:opacity-40"
+              style={{ backgroundColor: theme.color }}
+            ></div>
+            <div className="relative p-4 rounded-2xl border border-white/5 bg-[#1a1a1c] transition-transform group-hover/icon:-rotate-6">
+              <Icon className="w-5 h-5" style={{ color: theme.color }} />
             </div>
-          )}
-
-          {/* Lang/Country badge */}
-          {log.data?.lang && (
-            <div className="flex items-center gap-1.5 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-lg">
-              <Globe className="w-3 h-3 text-sky-400" />
-              <span className="text-[10px] font-black text-sky-400 uppercase">
-                {log.data.lang}
-              </span>
-            </div>
-          )}
-
-          {/* Amount badge */}
-          {log.data?.amount && (
-            <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
-              <DollarSign className="w-3 h-3 text-emerald-400" />
-              <span className="text-[11px] font-black text-emerald-400">
-                ${Number(log.data.amount).toFixed(2)}
-              </span>
-            </div>
-          )}
+          </div>
+          <div className="sm:h-20 w-px bg-white/5 hidden sm:block"></div>
         </div>
 
-        {/* Data summary / Small metadata */}
-        {log.data?.action && (
-          <div className="text-[10px] text-gray-500 font-mono italic opacity-60">
-            Action: {log.data.action} • {log.data.details || ""}
+        {/* Content Block */}
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1.5 text-gray-500 font-bold text-[10px] uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full">
+              <Clock className="w-3 h-3 text-gray-700" />
+              {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </span>
+            <span
+              className="text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1 rounded-lg border border-white/5"
+              style={{ color: theme.color, backgroundColor: theme.bg }}
+            >
+              {theme.label}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 className="text-white/90 text-[16px] font-medium leading-relaxed tracking-tight break-words">
+              {log.message}
+            </h3>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {log.data?.username && (
+                <Badge
+                  icon={User}
+                  label={`@${log.data.username}`}
+                  color="text-indigo-400"
+                  bg="bg-indigo-400/5"
+                />
+              )}
+              {log.data?.lang && (
+                <Badge
+                  icon={Globe}
+                  label={log.data.lang}
+                  color="text-sky-400"
+                  bg="bg-sky-400/5"
+                  border
+                />
+              )}
+              {log.data?.amount && (
+                <Badge
+                  icon={DollarSign}
+                  label={`$${log.data.amount}`}
+                  color="text-emerald-400"
+                  bg="bg-emerald-400/5"
+                  border
+                />
+              )}
+            </div>
+          </div>
+
+          {log.data?.details && (
+            <div className="text-[11px] text-gray-600 font-medium bg-black/30 px-3 py-2 rounded-xl italic border border-white/5">
+              "{log.data.details}"
+            </div>
+          )}
+        </div>
+
+        {/* Right Action Block */}
+        {log.data?.botUsername && (
+          <div className="shrink-0 pt-2 sm:pt-0">
+            <a
+              href={`https://t.me/${log.data.botUsername}`}
+              target="_blank"
+              rel="noreferrer"
+              className="group/link flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-3xl transition-all"
+            >
+              <div className="flex flex-col items-end">
+                <div className="text-[8px] text-gray-500 font-black uppercase tracking-widest group-hover/link:text-primary transition-colors">
+                  Target Bot
+                </div>
+                <div className="text-sm font-bold text-gray-300">
+                  @{log.data.botUsername}
+                </div>
+              </div>
+              <div className="p-2 bg-black/40 rounded-xl group-hover/link:translate-x-1 transition-all">
+                <ChevronRight className="w-4 h-4 text-gray-500 group-hover/link:text-white" />
+              </div>
+            </a>
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Right side bot shortcut */}
-      {log.data?.botUsername && (
-        <div className="shrink-0 flex items-center gap-2">
-          <a
-            href={`https://t.me/${log.data.botUsername}`}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 bg-white/[0.03] border border-white/5 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:bg-primary/20 hover:border-primary/30 transition-all flex items-center gap-2"
-          >
-            <Bot className="w-3.5 h-3.5" />@{log.data.botUsername}
-          </a>
+function Badge({ icon: Icon, label, color, bg, border }: any) {
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${bg} ${border ? "border border-white/5" : ""}`}
+    >
+      <Icon className={`w-3 h-3 ${color}`} />
+      <span
+        className={`text-[11px] font-bold ${color} tracking-tight uppercase`}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function EmptyState({ isConnected }: any) {
+  return (
+    <div className="p-20 flex flex-col items-center justify-center gap-6 animate-pulse opacity-20">
+      <ShieldCheck className="w-20 h-20 text-gray-600" />
+      <div className="text-center">
+        <div className="text-2xl font-black text-white uppercase tracking-widest">
+          {isConnected ? "Oqim bo'sh" : "Offline"}
         </div>
-      )}
+        <div className="text-gray-600 text-sm font-bold uppercase tracking-widest mt-2">
+          {isConnected ? "Hozircha yangiliklar yo'q" : "Ulanish kutilmoqda..."}
+        </div>
+      </div>
     </div>
   );
 }
