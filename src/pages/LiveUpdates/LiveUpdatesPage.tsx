@@ -133,15 +133,19 @@ export function LiveUpdatesPage() {
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    // Check both 'token' and 'accessToken'
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("accessToken");
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    // Proceed even if token is null, as we now support cookie-based auth in the backend
+    const apiUrl =
+      import.meta.env.VITE_API_URL || "https://api.akhmads.net/api/v1";
     const socketUrl = apiUrl.replace("/api/v1", "").replace("/api", "");
 
     const socket = io(`${socketUrl}/admin`, {
       auth: { token },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
+      withCredentials: true,
     });
 
     socket.on("connect", () => {
