@@ -7,7 +7,6 @@ import {
   Send,
   Trash2,
   Zap,
-  MessageSquare,
   CheckCircle2,
   XCircle,
   AlertTriangle,
