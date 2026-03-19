@@ -115,7 +115,6 @@ export function LiveUpdatesPage() {
   const [botFilter, setBotFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [allBots, setAllBots] = useState<BotResponse[]>([]);
-  const [isLoadingBots, setIsLoadingBots] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -133,7 +132,6 @@ export function LiveUpdatesPage() {
   // Fetch Bots for filter
   useEffect(() => {
     const fetchBots = async () => {
-      setIsLoadingBots(true);
       try {
         const res = await adminService.getAllModerationBots({
           status: "ACTIVE",
@@ -142,8 +140,6 @@ export function LiveUpdatesPage() {
         setAllBots(res.data || []);
       } catch (err) {
         console.error("Failed to fetch bots", err);
-      } finally {
-        setIsLoadingBots(false);
       }
     };
     fetchBots();
@@ -427,6 +423,13 @@ function FeedItem({ log }: { log: LogEntry }) {
 
   return (
     <div className="group flex flex-col md:flex-row gap-4 items-start px-8 py-5 hover:bg-white/[0.02] transition-colors border-l-4 border-l-transparent hover:border-l-primary/40">
+      {/* Type Icon */}
+      <div
+        className={`p-2.5 rounded-xl border ${config.bg} ${config.border} shrink-0 mt-1`}
+      >
+        <Icon className={`w-5 h-5 ${config.color}`} />
+      </div>
+
       {/* Time column */}
       <div className="w-20 pt-1 shrink-0 flex flex-col gap-1">
         <div className="flex items-center gap-1.5 text-gray-600">
