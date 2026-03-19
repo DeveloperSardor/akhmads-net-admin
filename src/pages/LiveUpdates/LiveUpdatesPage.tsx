@@ -18,11 +18,8 @@ import {
   DollarSign,
   User,
   ShieldCheck,
-  TrendingUp,
-  BarChart3,
-  Signal,
-  ArrowUpRight,
   LayoutGrid,
+  History,
 } from "lucide-react";
 import { adminService } from "../../api/services/admin.service";
 import type { BotResponse } from "../../api/services/bots.service";
@@ -42,15 +39,35 @@ interface LogEntry {
   data?: any;
 }
 
-const TYPE_MAP = {
-  success: { label: "Muvaffaqiyat", color: "emerald", icon: CheckCircle2 },
-  error: { label: "Xatolik", color: "rose", icon: XCircle },
-  warning: { label: "Ehtiyotkorlik", color: "amber", icon: AlertTriangle },
-  system: { label: "Sistema", color: "purple", icon: Zap },
-  broadcast: { label: "Broadcast", color: "indigo", icon: Send },
-  ad: { label: "Reklama", color: "blue", icon: Megaphone },
-  bot: { label: "Bot Update", color: "teal", icon: Bot },
-  info: { label: "Ma'lumot", color: "sky", icon: Info },
+const TYPE_CONFIG = {
+  success: {
+    label: "Success",
+    color: "#10b981",
+    bg: "#064e3b",
+    icon: CheckCircle2,
+  },
+  error: { label: "Critical", color: "#f43f5e", bg: "#4c0519", icon: XCircle },
+  warning: {
+    label: "Warning",
+    color: "#f59e0b",
+    bg: "#451a03",
+    icon: AlertTriangle,
+  },
+  system: { label: "System", color: "#8b5cf6", bg: "#2e1065", icon: Zap },
+  broadcast: {
+    label: "Broadcast",
+    color: "#6366f1",
+    bg: "#1e1b4b",
+    icon: Send,
+  },
+  ad: {
+    label: "Advertising",
+    color: "#3b82f6",
+    bg: "#172554",
+    icon: Megaphone,
+  },
+  bot: { label: "Bot Activity", color: "#14b8a6", bg: "#042f2e", icon: Bot },
+  info: { label: "Info", color: "#0ea5e9", bg: "#082f49", icon: Info },
 };
 
 export function LiveUpdatesPage() {
@@ -94,7 +111,7 @@ export function LiveUpdatesPage() {
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
     socket.on("terminal:log", (log: LogEntry) => {
-      setLogs((prev) => [log, ...prev].slice(0, 200));
+      setLogs((prev) => [log, ...prev].slice(0, 300));
     });
 
     socketRef.current = socket;
@@ -111,361 +128,242 @@ export function LiveUpdatesPage() {
       const matchesSearch =
         !searchQuery ||
         log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.data?.userId?.includes(searchQuery);
+        log.data?.username?.toLowerCase().includes(searchQuery.toLowerCase());
+
       return matchesType && matchesBot && matchesSearch;
     });
   }, [logs, typeFilter, botFilter, searchQuery]);
 
-  // Statistics for the sidebar
-  const stats = useMemo(() => {
-    const counts: Record<string, number> = {};
-    logs.forEach((l) => (counts[l.type] = (counts[l.type] || 0) + 1));
-    return counts;
-  }, [logs]);
-
   return (
-    <div className="min-h-screen bg-[#050608] text-slate-200 p-4 md:p-8 font-sans">
-      {/* Top Navigation / Status Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.15)] overflow-hidden relative">
-            <div className="absolute inset-0 bg-primary opacity-5 animate-pulse"></div>
-            <Signal
-              className={`w-7 h-7 ${isConnected ? "text-primary" : "text-slate-700 animate-pulse"}`}
-            />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              Monitor Center
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <div
-                className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-rose-500 shadow-[0_0_8px_#f43f5e]"}`}
-              ></div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                {isConnected ? "Network Connected" : "Connection Lost"} • v2.4.0
+    <div className="min-h-screen bg-[#09090b] text-zinc-400 font-sans p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header - Simple & Clean */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-900">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-zinc-100 flex items-center gap-2">
+              Live Console{" "}
+              <span className="text-xs font-medium text-zinc-600 px-2 py-0.5 rounded border border-zinc-800">
+                BETA v2
               </span>
+            </h1>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div
+                  className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-rose-500 animate-pulse"}`}
+                ></div>
+                <span
+                  className={
+                    isConnected
+                      ? "text-emerald-500/80 font-medium"
+                      : "text-rose-500/80"
+                  }
+                >
+                  {isConnected ? "Operational" : "Disconnected"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 border-l border-zinc-800 pl-4">
+                <History className="w-3.5 h-3.5 text-zinc-600" />
+                <span>Tracking {logs.length} events</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-slate-900/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md">
-          {["all", "bot", "ad", "broadcast", "system"].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTypeFilter(t)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                typeFilter === t
-                  ? "bg-primary text-white shadow-lg"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-          <div className="w-px h-6 bg-white/10 mx-2"></div>
-          <button
-            onClick={() => setLogs([])}
-            className="p-2.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-            title="Clear stream"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* Main Event Stream */}
-        <div className="xl:col-span-3 space-y-4">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
-              <Radio className="w-4 h-4 text-emerald-500" />
-              Live Stream Intelligence
-            </h2>
-            <div className="relative group min-w-[300px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search events, IDs, or text..."
-                className="w-full bg-slate-900/50 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-xs focus:bg-slate-900 focus:border-primary/50 transition-all outline-none"
+                placeholder="Search..."
+                className="bg-transparent border border-zinc-800 hover:border-zinc-700 focus:border-indigo-500/50 rounded-lg py-2 pl-9 pr-4 text-xs text-zinc-200 outline-none w-full md:w-64 transition-all"
               />
             </div>
-          </div>
-
-          <div className="space-y-3 pb-20">
-            {filteredLogs.length > 0 ? (
-              filteredLogs.map((log, i) => <EventCard key={i} log={log} />)
-            ) : (
-              <EmptyStream isConnected={isConnected} />
-            )}
+            <button
+              onClick={() => setLogs([])}
+              className="flex items-center gap-2 px-4 py-2 border border-zinc-800 hover:bg-zinc-900 rounded-lg text-xs font-medium transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear
+            </button>
           </div>
         </div>
 
-        {/* Intelligence Sidebar */}
-        <div className="xl:col-span-1 space-y-8">
-          {/* Bot Filter Card */}
-          <div className="glass-panel p-6">
-            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest mb-6">
-              <Bot className="w-4 h-4 text-primary" />
-              Filter By Target
-            </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              <BotItem
-                name="All Bots"
-                username="all"
-                icon={LayoutGrid}
-                active={botFilter === "all"}
-                onClick={() => setBotFilter("all")}
-              />
-              {allBots.map((bot) => (
-                <BotItem
-                  key={bot.id}
-                  name={bot.name}
-                  username={bot.username}
-                  active={botFilter === bot.username}
-                  onClick={() => setBotFilter(bot.username)}
-                />
+        {/* Filters bar */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {["all", "bot", "broadcast", "ad", "system", "error"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setTypeFilter(f)}
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                  typeFilter === f
+                    ? "bg-indigo-600 border-indigo-500 text-white"
+                    : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700"
+                }`}
+              >
+                {f === "all"
+                  ? "All Events"
+                  : f.charAt(0).toUpperCase() + f.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-zinc-600">Bot:</span>
+            <select
+              value={botFilter}
+              onChange={(e) => setBotFilter(e.target.value)}
+              className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-300 outline-none focus:border-indigo-500/50 transition-all cursor-pointer"
+            >
+              <option value="all">Global (All Bots)</option>
+              {allBots.map((b) => (
+                <option key={b.id} value={b.username}>
+                  @{b.username}
+                </option>
               ))}
-            </div>
+            </select>
+          </div>
+        </div>
+
+        {/* Main Console Table */}
+        <div className="bg-[#0c0c0e] border border-zinc-900 rounded-xl overflow-hidden shadow-2xl">
+          <div className="grid grid-cols-[100px_140px_180px_1fr_150px] gap-4 px-6 py-4 bg-zinc-900/30 border-b border-zinc-900 text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+            <div>Time</div>
+            <div>Type</div>
+            <div>Source Bot</div>
+            <div>Activity Overview</div>
+            <div className="text-right">Origin</div>
           </div>
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-            <MetricCard
-              label="System Integrity"
-              value="99.9%"
-              icon={ShieldCheck}
-              growth="+0.02%"
-            />
-            <MetricCard
-              label="Active Listeners"
-              value="2,481"
-              icon={Activity}
-              growth="+12%"
-            />
-          </div>
-
-          {/* Event Distribution */}
-          <div className="glass-panel p-6">
-            <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest mb-6">
-              <BarChart3 className="w-4 h-4 text-primary" />
-              Event Distribution
-            </div>
-            <div className="space-y-4">
-              {Object.entries(TYPE_MAP)
-                .slice(4)
-                .map(([type, config]) => (
-                  <div key={type} className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      <span>{config.label}</span>
-                      <span>{stats[type] || 0}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full bg-${config.color}-500/50 transition-all duration-1000`}
-                        style={{
-                          width: `${((stats[type] || 0) / logs.length) * 100 || 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-            </div>
+          <div className="max-h-[700px] overflow-y-auto divide-y divide-zinc-900 custom-scrollbar pb-10">
+            {filteredLogs.length > 0 ? (
+              filteredLogs.map((log, i) => <ConsoleRow key={i} log={log} />)
+            ) : (
+              <EmptyState />
+            )}
           </div>
         </div>
       </div>
 
       <style>{`
-        .glass-panel {
-           background: rgba(15, 23, 42, 0.4);
-           backdrop-filter: blur(12px);
-           border: 1px solid rgba(255, 255, 255, 0.05);
-           border-radius: 2rem;
-        }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
       `}</style>
     </div>
   );
 }
 
-function EventCard({ log }: { log: LogEntry }) {
-  const type = TYPE_MAP[log.type as keyof typeof TYPE_MAP] || TYPE_MAP.info;
-  const Icon = type.icon;
-  const isBotEvent = log.type === "bot";
+function ConsoleRow({ log }: { log: LogEntry }) {
+  const config =
+    TYPE_CONFIG[log.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.info;
+  const Icon = config.icon;
+  const time = new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
+    hour12: false,
+  });
 
   return (
-    <div className="group animate-in fade-in slide-in-from-left-4 duration-500">
-      <div className="flex gap-4">
-        {/* Vertical Time/Icon axis */}
-        <div className="flex flex-col items-center shrink-0 w-12">
-          <div
-            className={`p-2.5 rounded-xl border border-white/5 bg-slate-900/80 text-${type.color}-400 shadow-xl group-hover:scale-110 transition-transform duration-300`}
-          >
-            <Icon className="w-5 h-5" />
-          </div>
-          <div className="w-px h-full bg-gradient-to-b from-white/10 to-transparent my-2"></div>
-        </div>
-
-        {/* Card Content */}
-        <div className="flex-1 bg-slate-900/40 hover:bg-slate-900/60 transition-all border border-white/5 p-5 rounded-3xl relative overflow-hidden group-hover:border-primary/20">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div
-                className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded bg-${type.color}-500/10 text-${type.color}-400 border border-${type.color}-500/20`}
-              >
-                {type.label}
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1.5">
-                <Clock className="w-3 h-3" />
-                {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
-                  hour12: false,
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                })}
-              </span>
-            </div>
-            {log.data?.botUsername && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-slate-500 hidden sm:inline">
-                  Via Bot:
-                </span>
-                <a
-                  href={`https://t.me/${log.data.botUsername}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-primary hover:underline"
-                >
-                  @{log.data.botUsername}
-                </a>
-              </div>
-            )}
-          </div>
-
-          {/* Message Body */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 leading-relaxed mb-4">
-                {log.message}
-              </p>
-
-              {/* Metadata Chips */}
-              <div className="flex flex-wrap gap-2">
-                {log.data?.username && (
-                  <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg text-xs text-slate-400">
-                    <User className="w-3 h-3 text-slate-500" />
-                    {log.data.username}
-                  </div>
-                )}
-                {log.data?.userId && (
-                  <div className="bg-white/5 px-2.5 py-1 rounded-lg text-[10px] text-slate-600 font-mono">
-                    ID: {log.data.userId}
-                  </div>
-                )}
-                {log.data?.lang && (
-                  <div className="flex items-center gap-1.5 bg-blue-500/5 border border-blue-500/10 px-2 py-1 rounded-lg text-[10px] font-bold text-blue-400 uppercase">
-                    <Globe className="w-3 h-3" />
-                    {log.data.lang}
-                  </div>
-                )}
-                {log.data?.amount && (
-                  <div className="flex items-center gap-1.5 bg-emerald-500/5 border border-emerald-500/10 px-2 py-1 rounded-lg text-[10px] font-bold text-emerald-400">
-                    <DollarSign className="w-3 h-3" />
-                    {log.data.amount}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Action / Visual */}
-            {isBotEvent && (
-              <div className="shrink-0 flex items-center justify-center p-4 bg-primary/5 border border-primary/10 rounded-2xl group-hover:bg-primary/10 transition-colors">
-                <TrendingUp className="w-5 h-5 text-primary opacity-40 group-hover:opacity-100 transition-opacity" />
-              </div>
-            )}
-          </div>
-
-          {/* Hover Glow */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
+    <div className="grid grid-cols-[100px_140px_180px_1fr_150px] gap-4 px-6 py-4 hover:bg-zinc-900/30 transition-all group items-center">
+      {/* Column: Time */}
+      <div className="text-[11px] font-mono font-medium text-zinc-600 group-hover:text-zinc-400 flex items-center gap-2">
+        <Clock className="w-3 h-3 opacity-40" />
+        {time}
       </div>
-    </div>
-  );
-}
 
-function BotItem({ name, username, active, onClick, icon: CustomIcon }: any) {
-  const Icon = CustomIcon || Bot;
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all border ${
-        active
-          ? "bg-primary/20 border-primary/40 text-white"
-          : "bg-transparent border-transparent text-slate-500 hover:bg-white/5"
-      }`}
-    >
-      <div
-        className={`p-2 rounded-xl transition-colors ${active ? "bg-primary text-white" : "bg-slate-900"}`}
-      >
-        <Icon className="w-4 h-4" />
-      </div>
-      <div className="text-left overflow-hidden">
+      {/* Column: Type Badge */}
+      <div className="flex items-center">
         <div
-          className={`text-xs font-bold leading-none mb-1 truncate ${active ? "text-white" : "text-slate-300"}`}
+          className="flex items-center gap-2 px-2.5 py-1 rounded-full border"
+          style={{
+            borderColor: `${config.color}20`,
+            backgroundColor: `${config.color}10`,
+          }}
         >
-          {name}
-        </div>
-        <div className="text-[10px] font-medium opacity-50 truncate">
-          @{username}
+          <Icon className="w-3 h-3" style={{ color: config.color }} />
+          <span
+            className="text-[10px] font-bold uppercase tracking-tight"
+            style={{ color: config.color }}
+          >
+            {config.label}
+          </span>
         </div>
       </div>
-    </button>
-  );
-}
 
-function MetricCard({ label, value, icon: Icon, growth }: any) {
-  return (
-    <div className="glass-panel p-6 flex flex-col gap-4">
-      <div className="flex justify-between items-start">
-        <div className="p-3 bg-slate-900 rounded-2xl border border-white/5">
-          <Icon className="w-5 h-5 text-primary" />
-        </div>
-        <div className="flex items-center gap-1 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">
-          <ArrowUpRight className="w-3 h-3" />
-          {growth}
+      {/* Column: Bot Source */}
+      <div className="flex items-center gap-2 truncate">
+        {log.data?.botUsername ? (
+          <div className="flex items-center gap-2 min-w-0">
+            <Bot className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
+            <a
+              href={`https://t.me/${log.data.botUsername}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-zinc-400 hover:text-indigo-400 transition-colors truncate"
+            >
+              @{log.data.botUsername}
+            </a>
+          </div>
+        ) : (
+          <span className="text-[10px] text-zinc-800 font-bold uppercase">
+            System-wide
+          </span>
+        )}
+      </div>
+
+      {/* Column: Main Message */}
+      <div className="min-w-0 flex flex-col gap-1">
+        <p className="text-[13px] text-zinc-300 font-medium leading-relaxed truncate group-hover:text-white transition-colors">
+          {log.message}
+        </p>
+        <div className="flex items-center gap-3">
+          {log.data?.username && (
+            <span className="text-[10px] text-zinc-600 flex items-center gap-1">
+              <User className="w-3 h-3" />
+              {log.data.username}
+            </span>
+          )}
+          {log.data?.amount && (
+            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+              <DollarSign className="w-3 h-3" />${log.data.amount}
+            </span>
+          )}
+          {log.data?.lang && (
+            <span className="text-[10px] text-zinc-700 uppercase">
+              {log.data.lang}
+            </span>
+          )}
         </div>
       </div>
-      <div>
-        <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">
-          {label}
-        </div>
-        <div className="text-3xl font-bold text-white tracking-tighter">
-          {value}
+
+      {/* Column: Right Action */}
+      <div className="text-right flex items-center justify-end gap-3">
+        {log.data?.action && (
+          <span className="text-[9px] font-bold text-zinc-700 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+            {log.data.action}
+          </span>
+        )}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <Info className="w-3.5 h-3.5 text-zinc-700 hover:text-zinc-500 cursor-pointer" />
         </div>
       </div>
     </div>
   );
 }
 
-function EmptyStream({ isConnected }: { isConnected: boolean }) {
+function EmptyState() {
   return (
-    <div className="py-20 text-center space-y-4">
-      <div className="relative inline-block">
-        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full"></div>
-        <Zap className="w-20 h-20 text-slate-800 relative z-10 mx-auto" />
+    <div className="p-20 flex flex-col items-center justify-center gap-4">
+      <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center border border-zinc-800">
+        <Activity className="w-6 h-6 text-zinc-700 animate-pulse" />
       </div>
-      <div className="text-xl font-bold text-white">
-        {isConnected ? "Waiting for activity..." : "Network Offline"}
+      <div className="text-center">
+        <p className="text-sm font-semibold text-zinc-500">
+          Listening for inbound traffic
+        </p>
+        <p className="text-xs text-zinc-700">
+          Events will synchronize here as they occur.
+        </p>
       </div>
-      <p className="text-slate-500 text-sm max-w-xs mx-auto">
-        {isConnected
-          ? "Connection is live. Whenever a bot event occurs, it will appear here instantly."
-          : "Trying to re-establish connection with AKHMADS Intelligence Services."}
-      </p>
     </div>
   );
 }
