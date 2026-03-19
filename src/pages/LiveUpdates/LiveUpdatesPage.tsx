@@ -172,6 +172,32 @@ export function LiveUpdatesPage() {
       ]);
     });
 
+    socket.on("connect_error", (error) => {
+      setIsConnected(false);
+      setLogs((prev) => [
+        {
+          timestamp: new Date().toISOString(),
+          message: `🚫 Ulanish xatosi: ${error.message}`,
+          type: "error",
+          data: { details: error.toString() },
+        },
+        ...prev,
+      ]);
+      console.error("Socket connect_error:", error);
+    });
+
+    socket.on("connect_timeout", () => {
+      setIsConnected(false);
+      setLogs((prev) => [
+        {
+          timestamp: new Date().toISOString(),
+          message: "⏳ Ulanish vaqti tugadi (Timeout)",
+          type: "warning",
+        },
+        ...prev,
+      ]);
+    });
+
     socket.on("terminal:log", (log: LogEntry) => {
       setLogs((prev) => [log, ...prev].slice(0, 200));
     });
