@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   Info,
   Search,
-  Clock,
   DollarSign,
   User,
   History,
