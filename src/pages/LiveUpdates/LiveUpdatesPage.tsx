@@ -1,250 +1,388 @@
-import { useEffect, useState } from "react";
-import { apiClient } from "../../api/client";
+import { useEffect, useState, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 import {
-  Loader2,
   Activity,
-  User,
   Bot,
   Megaphone,
   Send,
   Wallet,
-  RefreshCcw,
+  Trash2,
+  Zap,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Info,
+  Radio,
 } from "lucide-react";
 
-interface LiveUpdate {
-  id: string;
+interface LogEntry {
+  timestamp: string;
+  message: string;
   type:
-    | "AD"
-    | "BOT"
-    | "USER"
-    | "BROADCAST"
-    | "WITHDRAWAL"
-    | "PAYMENT"
-    | "ADMIN";
-  action: string;
-  status: string;
-  title: string;
-  user: string;
-  date: string;
-  details: string;
+    | "info"
+    | "success"
+    | "warning"
+    | "error"
+    | "system"
+    | "broadcast"
+    | "ad"
+    | "bot";
+  data?: any;
+}
+
+function getIcon(type: LogEntry["type"]) {
+  switch (type) {
+    case "success":
+      return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
+    case "error":
+      return <XCircle className="w-5 h-5 text-rose-500" />;
+    case "warning":
+      return <AlertTriangle className="w-5 h-5 text-amber-500" />;
+    case "system":
+      return <Zap className="w-5 h-5 text-purple-500" />;
+    case "broadcast":
+      return <Send className="w-5 h-5 text-indigo-500" />;
+    case "ad":
+      return <Megaphone className="w-5 h-5 text-blue-500" />;
+    case "bot":
+      return <Bot className="w-5 h-5 text-teal-500" />;
+    default:
+      return <Info className="w-5 h-5 text-sky-500" />;
+  }
+}
+
+function getBg(type: LogEntry["type"]) {
+  switch (type) {
+    case "success":
+      return "bg-emerald-500/10 border-emerald-500/20";
+    case "error":
+      return "bg-rose-500/10 border-rose-500/20";
+    case "warning":
+      return "bg-amber-500/10 border-amber-500/20";
+    case "system":
+      return "bg-purple-500/10 border-purple-500/20";
+    case "broadcast":
+      return "bg-indigo-500/10 border-indigo-500/20";
+    case "ad":
+      return "bg-blue-500/10 border-blue-500/20";
+    case "bot":
+      return "bg-teal-500/10 border-teal-500/20";
+    default:
+      return "bg-sky-500/10 border-sky-500/20";
+  }
+}
+
+function getAccent(type: LogEntry["type"]) {
+  switch (type) {
+    case "success":
+      return "bg-emerald-500";
+    case "error":
+      return "bg-rose-500";
+    case "warning":
+      return "bg-amber-500";
+    case "system":
+      return "bg-purple-500";
+    case "broadcast":
+      return "bg-indigo-500";
+    case "ad":
+      return "bg-blue-500";
+    case "bot":
+      return "bg-teal-500";
+    default:
+      return "bg-sky-500";
+  }
+}
+
+function getLabel(type: LogEntry["type"]) {
+  switch (type) {
+    case "success":
+      return "success";
+    case "error":
+      return "xatolik";
+    case "warning":
+      return "ogohlantirish";
+    case "system":
+      return "tizim";
+    case "broadcast":
+      return "broadcast";
+    case "ad":
+      return "reklama";
+    case "bot":
+      return "bot update";
+    default:
+      return type;
+  }
 }
 
 export function LiveUpdatesPage() {
-  const [updates, setUpdates] = useState<LiveUpdate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [filter, setFilter] = useState<string>("all");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
 
-  const fetchLiveUpdates = async () => {
-    try {
-      const response = await apiClient.get<{ data: { updates: LiveUpdate[] } }>(
-        "/admin/live-updates",
-      );
-      setUpdates(response.data.data.updates);
-      setError(null);
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to fetch live updates");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const FILTERS = [
+    "all",
+    "bot",
+    "system",
+    "success",
+    "error",
+    "warning",
+    "ad",
+    "broadcast",
+  ];
 
   useEffect(() => {
-    fetchLiveUpdates();
-    // Live monitoring: poll every 10 seconds
-    const interval = setInterval(fetchLiveUpdates, 10000);
-    return () => clearInterval(interval);
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const socketUrl = apiUrl.replace("/api/v1", "").replace("/api", "");
+
+    const socket = io(`${socketUrl}/admin`, {
+      auth: { token },
+      transports: ["websocket"],
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      setLogs((prev) => [
+        {
+          timestamp: new Date().toISOString(),
+          message: "✅ Live kanal bilan ulanildi",
+          type: "system",
+        },
+        ...prev,
+      ]);
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      setLogs((prev) => [
+        {
+          timestamp: new Date().toISOString(),
+          message: "❌ Ulanish uzildi, qayta ulanilmoqda...",
+          type: "error",
+        },
+        ...prev,
+      ]);
+    });
+
+    socket.on("terminal:log", (log: LogEntry) => {
+      setLogs((prev) => [log, ...prev].slice(0, 200));
+    });
+
+    socketRef.current = socket;
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "AD":
-        return <Megaphone className="w-5 h-5 text-purple-500" />;
-      case "BOT":
-        return <Bot className="w-5 h-5 text-blue-500" />;
-      case "USER":
-        return <User className="w-5 h-5 text-green-500" />;
-      case "BROADCAST":
-        return <Send className="w-5 h-5 text-orange-500" />;
-      case "WITHDRAWAL":
-        return <Wallet className="w-5 h-5 text-yellow-500" />;
-      case "PAYMENT":
-        return <Wallet className="w-5 h-5 text-emerald-500" />;
-      case "ADMIN":
-        return <Activity className="w-5 h-5 text-red-500" />;
-      default:
-        return <Activity className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING_REVIEW":
-      case "PENDING":
-      case "REQUESTED":
-      case "DRAFT":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "APPROVED":
-      case "ACTIVE":
-      case "RUNNING":
-      case "COMPLETED":
-      case "SENT":
-      case "CONFIRMED":
-      case "LOGGED":
-      case "SUCCESS":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "REJECTED":
-      case "FAILED":
-      case "BANNED":
-      case "CANCELLED":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-400 border-gray-500/20";
-    }
-  };
+  const filtered =
+    filter === "all" ? logs : logs.filter((l) => l.type === filter);
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
             <div className="p-2 bg-primary/10 rounded-xl">
-              <Activity className="w-6 h-6 text-primary" />
+              <Radio className="w-6 h-6 text-primary animate-pulse" />
             </div>
             Jonli Efir
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
-            Platformadagi barcha harakatlar real vaqt rejimida (10s
-            yangilanish).
+            Barcha botlardagi real-time Telegram updatelar va tizim hodisalari.
           </p>
         </div>
-        <button
-          onClick={() => {
-            setIsLoading(true);
-            fetchLiveUpdates();
-          }}
-          className="bg-[#1a1a1a] hover:bg-[#222] text-white px-5 py-2.5 rounded-xl text-sm font-bold border border-white/5 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-black/20"
-        >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCcw className="w-4 h-4 text-primary" />
-          )}{" "}
-          Yangilash
-        </button>
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${
+              isConnected
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                : "bg-red-500/10 border-red-500/30 text-red-400"
+            }`}
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isConnected ? "bg-emerald-400 animate-pulse" : "bg-red-400"
+              }`}
+            />
+            {isConnected ? "LIVE" : "Ulanmadi"}
+          </div>
+          <button
+            onClick={() => setLogs([])}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 text-sm font-semibold transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+            Tozalash
+          </button>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 gap-6">
-        {isLoading && updates.length === 0 ? (
-          <div className="p-20 flex flex-col items-center justify-center bg-[#111] border border-[#222] rounded-3xl">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-            <p className="text-gray-400 font-medium animate-pulse">
-              Ma'lumotlar yuklanmoqda...
-            </p>
-          </div>
-        ) : error ? (
-          <div className="p-12 text-center bg-[#111] border border-red-500/20 rounded-3xl">
-            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-              <Activity className="w-8 h-8 text-red-500" />
+      {/* Filter Pills */}
+      <div className="flex flex-wrap gap-2">
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
+              filter === f
+                ? "bg-primary text-white border-primary"
+                : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            {f === "all" ? "Barchasi" : getLabel(f as LogEntry["type"])}
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-gray-600 self-center">
+          {filtered.length} ta hodisa
+        </span>
+      </div>
+
+      {/* Feed */}
+      <div className="bg-[#0a0a0b] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+        {/* Feed header */}
+        <div className="px-5 py-4 bg-white/[0.02] border-b border-white/5 flex items-center gap-3">
+          <MessageSquare className="w-4 h-4 text-primary" />
+          <span className="text-sm font-bold text-white/70 tracking-widest uppercase">
+            Activity Feed
+          </span>
+          <span className="ml-auto text-xs text-gray-600">
+            so'nggi 200 ta hodisa
+          </span>
+        </div>
+
+        <div className="overflow-y-auto max-h-[70vh] divide-y divide-white/[0.04]">
+          {!isConnected && logs.length === 0 && (
+            <div className="py-24 flex flex-col items-center justify-center gap-4 text-gray-600">
+              <Radio className="w-12 h-12 opacity-20 animate-pulse" />
+              <p className="text-sm font-medium">Socket'ga ulanilmoqda...</p>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
-              Xatolik yuz berdi
-            </h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">{error}</p>
-            <button
-              onClick={fetchLiveUpdates}
-              className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all active:scale-95 flex items-center gap-2 mx-auto"
+          )}
+
+          {isConnected && filtered.length === 0 && (
+            <div className="py-24 flex flex-col items-center justify-center gap-4 text-gray-600">
+              <Activity className="w-12 h-12 opacity-20" />
+              <p className="text-sm font-medium">
+                Botlardan update kutilmoqda...
+              </p>
+              <p className="text-xs opacity-60">
+                Botlarga biror narsa yuboring!
+              </p>
+            </div>
+          )}
+
+          {filtered.map((log, i) => (
+            <div
+              key={i}
+              className={`flex gap-4 items-start px-5 py-4 hover:bg-white/[0.02] transition-all ${getBg(log.type)} border-0 border-l-2 ${getAccent(log.type).replace("bg-", "border-l-")}`}
             >
-              <RefreshCcw className="w-4 h-4" />
-              Qayta urinish
-            </button>
-          </div>
-        ) : updates.length === 0 ? (
-          <div className="p-20 text-center bg-[#111] border border-[#222] rounded-3xl">
-            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-              <Activity className="w-10 h-10 text-gray-600" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">
-              Hozircha yangiliklar yo'q
-            </h3>
-            <p className="text-gray-500">
-              Platformada so'nggi vaqtlarda hech qanday harakat sodir bo'lmadi.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {updates.map((update, idx) => (
+              {/* Left accent */}
               <div
-                key={`${update.id}-${idx}`}
-                className="group relative bg-[#0a0a0a] border border-[#1a1a1a] hover:border-primary/30 rounded-2xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 overflow-hidden"
-              >
-                {/* Visual Accent */}
-                <div
-                  className={`absolute left-0 top-0 bottom-0 w-1 ${
-                    update.type === "AD"
-                      ? "bg-purple-500"
-                      : update.type === "BOT"
-                        ? "bg-blue-500"
-                        : update.type === "USER"
-                          ? "bg-green-500"
-                          : update.type === "BROADCAST"
-                            ? "bg-orange-500"
-                            : update.type === "WITHDRAWAL"
-                              ? "bg-yellow-500"
-                              : update.type === "PAYMENT"
-                                ? "bg-emerald-500"
-                                : "bg-red-500"
-                  } opacity-50 group-hover:opacity-100 transition-opacity`}
-                />
+                className={`w-0.5 self-stretch rounded-full ${getAccent(log.type)} shrink-0`}
+              />
 
-                <div className="flex items-center gap-4">
-                  {/* Icon Container */}
-                  <div
-                    className={`p-4 rounded-xl shrink-0 border border-white/5 bg-white/[0.02] group-hover:bg-white/[0.05] transition-colors`}
+              {/* Icon */}
+              <div className="shrink-0 mt-0.5">{getIcon(log.type)}</div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                {/* Time + type badge */}
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] text-gray-600 font-mono">
+                    {new Date(log.timestamp).toLocaleTimeString("uz-UZ", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    })}
+                  </span>
+                  <span
+                    className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${
+                      log.type === "bot"
+                        ? "bg-teal-500/10 text-teal-400 border-teal-500/20"
+                        : log.type === "success"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : log.type === "error"
+                            ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                            : log.type === "warning"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              : log.type === "system"
+                                ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                : log.type === "ad"
+                                  ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                  : log.type === "broadcast"
+                                    ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                                    : "bg-sky-500/10 text-sky-400 border-sky-500/20"
+                    }`}
                   >
-                    {getIcon(update.type)}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
-                      <span className="text-sm font-black text-white uppercase tracking-tight">
-                        {update.user}
-                      </span>
-                      <span className="text-[10px] font-black uppercase text-gray-500 px-2 py-0.5 bg-white/5 rounded-full border border-white/5">
-                        {update.type}
-                      </span>
-                      <span className="text-xs text-gray-600 ml-auto hidden sm:inline-flex items-center gap-1">
-                        <Activity className="w-3 h-3" />
-                        {new Date(update.date).toLocaleTimeString("uz-UZ", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {update.details}
-                    </p>
-                  </div>
-
-                  {/* Status & Time (Compact) */}
-                  <div className="hidden md:flex flex-col items-end gap-2 shrink-0">
-                    <span
-                      className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-lg border tracking-wider ${getStatusColor(update.status)}`}
-                    >
-                      {update.status}
+                    {getLabel(log.type)}
+                  </span>
+                  {log.data?.action && (
+                    <span className="text-[9px] text-gray-600 uppercase font-bold tracking-wider">
+                      {log.data.action}
                     </span>
-                    <span className="text-[10px] font-bold text-gray-600">
-                      {new Date(update.date).toLocaleDateString("uz-UZ")}
-                    </span>
-                  </div>
+                  )}
                 </div>
+
+                {/* Main message */}
+                <p className="text-sm font-medium text-white/90 leading-relaxed">
+                  {log.message}
+                </p>
+
+                {/* Meta badges */}
+                {log.data &&
+                  (log.data.username ||
+                    log.data.userId ||
+                    log.data.botUsername ||
+                    log.data.lang ||
+                    log.data.amount) && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {log.data.username && (
+                        <span className="text-[10px] bg-white/5 text-gray-400 px-2 py-0.5 rounded border border-white/5">
+                          @{log.data.username}
+                        </span>
+                      )}
+                      {!log.data.username && log.data.userId && (
+                        <span className="text-[10px] bg-white/5 text-gray-400 px-2 py-0.5 rounded border border-white/5">
+                          ID: {log.data.userId}
+                        </span>
+                      )}
+                      {log.data.lang && (
+                        <span className="text-[10px] bg-white/5 text-gray-400 px-2 py-0.5 rounded border border-white/5">
+                          🌐 {String(log.data.lang).toUpperCase()}
+                        </span>
+                      )}
+                      {log.data.amount && (
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
+                          $
+                          {typeof log.data.amount === "number"
+                            ? log.data.amount.toFixed(2)
+                            : log.data.amount}
+                        </span>
+                      )}
+                    </div>
+                  )}
               </div>
-            ))}
-          </div>
-        )}
+
+              {/* Bot link (right side) */}
+              {log.data?.botUsername && (
+                <a
+                  href={`https://t.me/${log.data.botUsername}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 hidden md:flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
+                >
+                  <Bot className="w-3.5 h-3.5" />@{log.data.botUsername}
+                </a>
+              )}
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
       </div>
     </div>
   );
