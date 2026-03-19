@@ -5,7 +5,6 @@ import {
   Bot,
   Megaphone,
   Send,
-  Wallet,
   Trash2,
   Zap,
   MessageSquare,
