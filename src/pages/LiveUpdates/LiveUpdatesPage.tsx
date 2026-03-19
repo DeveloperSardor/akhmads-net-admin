@@ -131,7 +131,7 @@ export function LiveUpdatesPage() {
 
     const socket = io(`${socketUrl}/admin`, {
       auth: { token },
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       withCredentials: true,
     });
 
