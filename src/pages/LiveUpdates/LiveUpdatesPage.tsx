@@ -140,7 +140,7 @@ export function LiveUpdatesPage() {
     // Proceed even if token is null, as we now support cookie-based auth in the backend
     const apiUrl =
       import.meta.env.VITE_API_URL || "https://api.akhmads.net/api/v1";
-    const socketUrl = apiUrl.replace("/api/v1", "").replace("/api", "");
+    const socketUrl = new URL(apiUrl).origin;
 
     const socket = io(`${socketUrl}/admin`, {
       auth: { token },
